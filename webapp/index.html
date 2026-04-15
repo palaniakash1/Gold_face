@@ -1362,25 +1362,18 @@
 
             const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
 
-            try {
-                const response = await fetch('/save-capture', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: dataUrl })
-                });
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            const filename = `goldface_${timestamp}.jpg`;
 
-                const result = await response.json();
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            link.click();
 
-                status.textContent = result.success ? 'Photo saved!' : 'Failed to save photo';
-                status.className = result.success ? 'status-bar success' : 'status-bar error';
-                status.style.display = 'block';
-                setTimeout(() => status.style.display = 'none', 2000);
-            } catch (err) {
-                status.textContent = 'Error saving photo';
-                status.className = 'status-bar error';
-                status.style.display = 'block';
-                setTimeout(() => status.style.display = 'none', 2000);
-            }
+            status.textContent = 'Photo downloaded!';
+            status.className = 'status-bar success';
+            status.style.display = 'block';
+            setTimeout(() => status.style.display = 'none', 2000);
         });
 
         loadJewelryImages();
