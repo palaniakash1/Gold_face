@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Face - Virtual Jewelry Try-On</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ffd700, #ffb347, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .camera-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .video-container {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.2);
+            background: #000;
+        }
+
+        #video {
+            display: block;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-prev, .btn-next {
+            background: linear-gradient(135deg, #ffd700, #ffb347);
+            color: #1a1a2e;
+        }
+
+        .btn-prev:hover, .btn-next:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-prev:disabled, .btn-next:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-add {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+        }
+
+        .btn-add:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .gallery-section {
+            width: 350px;
+        }
+
+        .gallery-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .gallery-category {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .category-title {
+            font-size: 0.9rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .thumbnail-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .thumbnail {
+            width: 70px;
+            height: 70px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px;
+        }
+
+        .thumbnail:hover {
+            transform: scale(1.1);
+            border-color: #ffd700;
+        }
+
+        .thumbnail.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .url-input-container {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.8rem;
+        }
+
+        .url-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .status.loading {
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+        }
+
+        .status.error {
+            background: rgba(255, 100, 100, 0.1);
+            color: #ff6464;
+        }
+
+        .status.success {
+            background: rgba(100, 255, 100, 0.1);
+            color: #64ff64;
+        }
+
+        .jewelry-info {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .jewelry-info span {
+            color: #ffd700;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .modal-buttons .cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .modal-buttons .add {
+            background: linear-gradient(135deg, #ffd700, #ffb347);
+            color: #1a1a2e;
+        }
+
+        .bg-remove-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .bg-option {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .bg-option.active {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .gallery-section {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gold Face</h1>
+            <p>Virtual Jewelry Try-On</p>
+        </header>
+
+        <div class="main-content">
+            <div class="camera-section">
+                <div class="video-container">
+                    <video id="video" width="640" height="480" autoplay playsinline></video>
+                    <canvas id="canvas" width="640" height="480"></canvas>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-prev" id="prevBtn">&#9664; Previous</button>
+                    <button class="btn btn-next" id="nextBtn">Next &#9654;</button>
+                </div>
+
+                <div class="jewelry-info" id="jewelryInfo">
+                    Wearing: <span id="currentCombo">Necklace 1 + Earring 1</span>
+                </div>
+
+                <div class="status loading" id="status">Loading face detection model...</div>
+            </div>
+
+            <div class="gallery-section">
+                <h3 class="gallery-title">Jewelry Collection</h3>
+                
+                <div class="gallery">
+                    <div class="gallery-category">
+                        <div class="category-header">
+                            <span class="category-title">Necklaces</span>
+                            <button class="btn btn-add" id="addNecklaceBtn">+ Add URL</button>
+                        </div>
+                        <div class="thumbnail-grid" id="necklaceGallery"></div>
+                        <div class="url-input-container" id="necklaceUrlContainer" style="display: none;">
+                            <input type="text" class="url-input" id="necklaceUrl" placeholder="Paste image URL...">
+                            <button class="btn btn-add" id="loadNecklaceUrl">Load</button>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-category">
+                        <div class="category-header">
+                            <span class="category-title">Earrings</span>
+                            <button class="btn btn-add" id="addEarringBtn">+ Add URL</button>
+                        </div>
+                        <div class="thumbnail-grid" id="earringGallery"></div>
+                        <div class="url-input-container" id="earringUrlContainer" style="display: none;">
+                            <input type="text" class="url-input" id="earringUrl" placeholder="Paste image URL...">
+                            <button class="btn btn-add" id="loadEarringUrl">Load</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="urlModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Add Custom Jewelry</h3>
+            
+            <div class="bg-remove-options">
+                <button class="bg-option active" data-mode="transparent" id="bgTransparent">Transparent BG</button>
+                <button class="bg-option" data-mode="auto" id="bgAuto">Auto Remove BG</button>
+                <button class="bg-option" data-mode="white" id="bgWhite">White BG</button>
+            </div>
+            
+            <input type="text" id="customUrlInput" placeholder="Paste image URL (PNG, JPG, WebP)...">
+            
+            <div class="modal-buttons">
+                <button class="cancel" id="modalCancel">Cancel</button>
+                <button class="add" id="modalAdd">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentComboEl = document.getElementById('currentCombo');
+        const necklaceGallery = document.getElementById('necklaceGallery');
+        const earringGallery = document.getElementById('earringGallery');
+
+        let necklaces = [];
+        let earrings = [];
+        let currentNecklaceIndex = 0;
+        let currentEarringIndex = 0;
+        let isModelLoaded = false;
+        let currentModalType = null;
+        let bgRemovalMode = 'transparent';
+
+        async function loadModels() {
+            try {
+                status.textContent = 'Loading face detection models...';
+                status.className = 'status loading';
+                
+                await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
+                await faceapi.nets.faceLandmark68TinyNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
+                
+                isModelLoaded = true;
+                status.textContent = 'Models loaded! Starting camera...';
+                status.className = 'status success';
+                
+                startCamera();
+            } catch (error) {
+                console.error('Error loading models:', error);
+                status.textContent = 'Error loading models. Please refresh the page.';
+                status.className = 'status error';
+            }
+        }
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480 } 
+                });
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    video.play();
+                    detectFaces();
+                };
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                status.textContent = 'Camera access denied. Please allow camera permission.';
+                status.className = 'status error';
+            }
+        }
+
+        async function detectFaces() {
+            if (!isModelLoaded) return;
+
+            const displaySize = { width: video.width, height: video.height };
+            faceapi.matchDimensions(canvas, displaySize);
+
+            const options = new faceapi.TinyFaceDetectorOptions({
+                inputSize: 320,
+                scoreThreshold: 0.5
+            });
+
+            async function detect() {
+                if (!video.paused && !video.ended) {
+                    const detections = await faceapi.detectAllFaces(video, options)
+                        .withFaceLandmarks(true);
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    if (detections.length > 0) {
+                        const landmarks = detections[0].landmarks;
+                        drawNecklace(landmarks);
+                        drawEarrings(landmarks);
+                    }
+                }
+                requestAnimationFrame(detect);
+            }
+            detect();
+        }
+
+        function removeBackground(image, mode = 'transparent') {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = image.width;
+            tempCanvas.height = image.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCtx.drawImage(image, 0, 0);
+            
+            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            const data = imageData.data;
+            
+            const bgColor = { r: 0, g: 0, b: 0 };
+            const threshold = 30;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const a = data[i + 3];
+                
+                let isBackground = false;
+                
+                if (mode === 'transparent') {
+                    isBackground = (r < threshold && g < threshold && b < threshold) ||
+                                   (r > 250 && g > 250 && b > 250) ||
+                                   a < 10;
+                } else if (mode === 'white') {
+                    isBackground = (r > 240 && g > 240 && b > 240);
+                } else if (mode === 'auto') {
+                    const brightness = (r + g + b) / 3;
+                    const colorfulness = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));
+                    
+                    const centerX = (i / 4) % tempCanvas.width;
+                    const centerY = Math.floor((i / 4) / tempCanvas.width);
+                    const centerDist = Math.sqrt(
+                        Math.pow(centerX - tempCanvas.width / 2, 2) +
+                        Math.pow(centerY - tempCanvas.height / 2, 2)
+                    );
+                    const maxDist = Math.sqrt(
+                        Math.pow(tempCanvas.width / 2, 2) +
+                        Math.pow(tempCanvas.height / 2, 2)
+                    );
+                    
+                    if (brightness > 240 && colorfulness < 20) {
+                        data[i + 3] = 0;
+                    }
+                    continue;
+                }
+                
+                if (isBackground) {
+                    if (mode === 'transparent' || mode === 'auto') {
+                        data[i + 3] = 0;
+                    } else if (mode === 'white') {
+                        data[i] = 255;
+                        data[i + 1] = 255;
+                        data[i + 2] = 255;
+                    }
+                }
+            }
+            
+            tempCtx.putImageData(imageData, 0, 0);
+            return tempCanvas;
+        }
+
+        function getNecklacePosition(landmarks) {
+            const jaw = landmarks.getJawOutline();
+            const chin = jaw[8];
+            
+            const leftJaw = jaw[0];
+            const rightJaw = jaw[16];
+            
+            const width = Math.sqrt(
+                Math.pow(rightJaw.x - leftJaw.x, 2) + 
+                Math.pow(rightJaw.y - leftJaw.y, 2)
+            ) * 0.8;
+            
+            const height = width * 0.35;
+            
+            return {
+                x: chin.x - width / 2,
+                y: chin.y + 15,
+                width: width,
+                height: height
+            };
+        }
+
+        function getEarringPositions(landmarks) {
+            const jaw = landmarks.getJawOutline();
+            const leftEar = jaw[0];
+            const rightEar = jaw[16];
+            
+            const nose = landmarks.getNose();
+            const leftNoseTip = nose[0];
+            const rightNoseTip = nose[16];
+            
+            const earDistance = Math.sqrt(
+                Math.pow(rightEar.x - leftEar.x, 2) +
+                Math.pow(rightEar.y - leftEar.y, 2)
+            );
+            
+            const earSize = earDistance * 0.18;
+            
+            return {
+                left: {
+                    x: leftEar.x - earSize * 0.3,
+                    y: leftEar.y + earDistance * 0.08,
+                    width: earSize,
+                    height: earSize * 1.8
+                },
+                right: {
+                    x: rightEar.x - earSize * 0.7,
+                    y: rightEar.y + earDistance * 0.08,
+                    width: earSize,
+                    height: earSize * 1.8
+                }
+            };
+        }
+
+        function drawNecklace(landmarks) {
+            if (necklaces.length === 0) return;
+            
+            const necklace = necklaces[currentNecklaceIndex];
+            if (!necklace || !necklace.loaded) return;
+            
+            const pos = getNecklacePosition(landmarks);
+            
+            let processedCanvas;
+            if (necklace.processed) {
+                processedCanvas = necklace.processed;
+            } else {
+                processedCanvas = removeBackground(necklace.img, necklace.bgMode || 'transparent');
+                necklace.processed = processedCanvas;
+            }
+            
+            ctx.save();
+            ctx.drawImage(
+                processedCanvas,
+                pos.x, pos.y, pos.width, pos.height
+            );
+            ctx.restore();
+        }
+
+        function drawEarrings(landmarks) {
+            if (earrings.length === 0) return;
+            
+            const earring = earrings[currentEarringIndex];
+            if (!earring || !earring.loaded) return;
+            
+            const pos = getEarringPositions(landmarks);
+            const img = earring.img;
+            
+            const halfWidth = img.width / 2;
+            
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = halfWidth;
+            tempCanvas.height = img.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            let processedLeft;
+            if (earring.processedLeft) {
+                processedLeft = earring.processedLeft;
+            } else {
+                tempCtx.clearRect(0, 0, halfWidth, img.height);
+                tempCtx.drawImage(img, 0, 0, halfWidth, img.height, 0, 0, halfWidth, img.height);
+                processedLeft = removeBackgroundCanvas(tempCtx, halfWidth, img.height, earring.bgMode || 'transparent');
+                earring.processedLeft = processedLeft;
+            }
+            
+            let processedRight;
+            if (earring.processedRight) {
+                processedRight = earring.processedRight;
+            } else {
+                tempCtx.clearRect(0, 0, halfWidth, img.height);
+                tempCtx.drawImage(img, halfWidth, 0, halfWidth, img.height, 0, 0, halfWidth, img.height);
+                processedRight = removeBackgroundCanvas(tempCtx, halfWidth, img.height, earring.bgMode || 'transparent');
+                earring.processedRight = processedRight;
+            }
+            
+            ctx.save();
+            ctx.drawImage(processedLeft, pos.left.x, pos.left.y, pos.left.width, pos.left.height);
+            ctx.drawImage(processedRight, pos.right.x, pos.right.y, pos.right.width, pos.right.height);
+            ctx.restore();
+        }
+
+        function removeBackgroundCanvas(sourceCtx, width, height, mode) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const targetCtx = canvas.getContext('2d');
+            
+            targetCtx.drawImage(sourceCtx.canvas, 0, 0);
+            
+            const imageData = targetCtx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            
+            const threshold = 30;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const a = data[i + 3];
+                
+                let isBackground = false;
+                
+                if (mode === 'transparent') {
+                    isBackground = (r < threshold && g < threshold && b < threshold) ||
+                                   (r > 250 && g > 250 && b > 250) ||
+                                   a < 10;
+                } else if (mode === 'white') {
+                    isBackground = (r > 240 && g > 240 && b > 240);
+                } else if (mode === 'auto') {
+                    const brightness = (r + g + b) / 3;
+                    const colorfulness = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));
+                    isBackground = brightness > 240 && colorfulness < 20;
+                }
+                
+                if (isBackground) {
+                    if (mode === 'transparent' || mode === 'auto') {
+                        data[i + 3] = 0;
+                    } else if (mode === 'white') {
+                        data[i] = 255;
+                        data[i + 1] = 255;
+                        data[i + 2] = 255;
+                    }
+                }
+            }
+            
+            targetCtx.putImageData(imageData, 0, 0);
+            return canvas;
+        }
+
+        function loadJewelryImages() {
+            const necklaceNames = ['necklace_1.png', 'necklace_2.png', 'necklace_3.png'];
+            const earringNames = ['earing_1.jpg', 'earing_2.jpg', 'earing_3.jpg'];
+            
+            necklaceNames.forEach((name, index) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.src = `jewelry/necklace/${name}`;
+                img.onload = () => {
+                    necklaces[index] = { img, loaded: true, bgMode: 'transparent', processed: null };
+                    addThumbnail(necklaceGallery, necklaces[index], index, 'necklace');
+                    checkAllLoaded();
+                };
+                img.onerror = () => {
+                    console.error(`Failed to load ${name}`);
+                    checkAllLoaded();
+                };
+            });
+            
+            earringNames.forEach((name, index) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.src = `jewelry/earring/${name}`;
+                img.onload = () => {
+                    earrings[index] = { img, loaded: true, bgMode: 'transparent', processedLeft: null, processedRight: null };
+                    addThumbnail(earringGallery, earrings[index], index, 'earring');
+                    checkAllLoaded();
+                };
+                img.onerror = () => {
+                    console.error(`Failed to load ${name}`);
+                    checkAllLoaded();
+                };
+            });
+        }
+
+        function addThumbnail(container, jewelry, index, type) {
+            const thumb = document.createElement('img');
+            thumb.src = jewelry.img.src;
+            thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
+            thumb.dataset.index = index;
+            thumb.dataset.type = type;
+            
+            thumb.addEventListener('click', () => {
+                container.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+                
+                if (type === 'necklace') {
+                    currentNecklaceIndex = index;
+                } else {
+                    currentEarringIndex = index;
+                }
+                updateCurrentCombo();
+            });
+            
+            container.appendChild(thumb);
+        }
+
+        function addCustomJewelry(url, type) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            const loadingStatus = status.textContent;
+            status.textContent = `Loading custom ${type}...`;
+            
+            img.onload = () => {
+                const jewelryArray = type === 'necklace' ? necklaces : earrings;
+                const gallery = type === 'necklace' ? necklaceGallery : earringGallery;
+                
+                const newJewelry = {
+                    img,
+                    loaded: true,
+                    bgMode: bgRemovalMode,
+                    processed: null,
+                    processedLeft: null,
+                    processedRight: null,
+                    isCustom: true
+                };
+                
+                jewelryArray.push(newJewelry);
+                addThumbnail(gallery, newJewelry, jewelryArray.length - 1, type);
+                
+                if (type === 'necklace') {
+                    currentNecklaceIndex = jewelryArray.length - 1;
+                    selectNecklace(currentNecklaceIndex);
+                } else {
+                    currentEarringIndex = jewelryArray.length - 1;
+                    selectEarring(currentEarringIndex);
+                }
+                
+                status.textContent = 'Ready! Point your face at the camera.';
+                status.className = 'status success';
+                
+                closeModal();
+            };
+            
+            img.onerror = () => {
+                status.textContent = `Failed to load image from URL`;
+                status.className = 'status error';
+                setTimeout(() => {
+                    status.textContent = loadingStatus;
+                    status.className = 'status success';
+                }, 2000);
+                closeModal();
+            };
+            
+            img.src = url;
+        }
+
+        function checkAllLoaded() {
+            const loadedNecklaces = necklaces.filter(n => n && n.loaded).length;
+            const loadedEarrings = earrings.filter(e => e && e.loaded).length;
+            
+            if (loadedNecklaces > 0 && loadedEarrings > 0) {
+                status.textContent = 'Ready! Point your face at the camera.';
+                status.className = 'status success';
+                updateCurrentCombo();
+            }
+        }
+
+        function updateCurrentCombo() {
+            const necklaceNum = currentNecklaceIndex + 1;
+            const earringNum = currentEarringIndex + 1;
+            currentComboEl.textContent = `Necklace ${necklaceNum} + Earring ${earringNum}`;
+        }
+
+        function selectNecklace(index) {
+            currentNecklaceIndex = index;
+            document.querySelectorAll('#necklaceGallery .thumbnail').forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+            updateCurrentCombo();
+        }
+
+        function selectEarring(index) {
+            currentEarringIndex = index;
+            document.querySelectorAll('#earringGallery .thumbnail').forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+            updateCurrentCombo();
+        }
+
+        function showModal(type) {
+            currentModalType = type;
+            document.getElementById('modalTitle').textContent = 
+                type === 'necklace' ? 'Add Custom Necklace' : 'Add Custom Earrings';
+            document.getElementById('customUrlInput').value = '';
+            document.getElementById('customUrlInput').placeholder = 'Paste image URL...';
+            document.getElementById('urlModal').classList.add('active');
+            document.getElementById('customUrlInput').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('urlModal').classList.remove('active');
+            currentModalType = null;
+        }
+
+        document.getElementById('addNecklaceBtn').addEventListener('click', () => showModal('necklace'));
+        document.getElementById('addEarringBtn').addEventListener('click', () => showModal('earring'));
+        
+        document.getElementById('modalCancel').addEventListener('click', closeModal);
+        
+        document.getElementById('modalAdd').addEventListener('click', () => {
+            const url = document.getElementById('customUrlInput').value.trim();
+            if (url && currentModalType) {
+                addCustomJewelry(url, currentModalType);
+            }
+        });
+
+        document.getElementById('customUrlInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const url = document.getElementById('customUrlInput').value.trim();
+                if (url && currentModalType) {
+                    addCustomJewelry(url, currentModalType);
+                }
+            }
+        });
+
+        document.querySelectorAll('.bg-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                bgRemovalMode = btn.dataset.mode;
+            });
+        });
+
+        document.getElementById('urlModal').addEventListener('click', (e) => {
+            if (e.target.id === 'urlModal') {
+                closeModal();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            const totalCombos = Math.max(necklaces.length, 1) * Math.max(earrings.length, 1);
+            if (totalCombos <= 1) return;
+            
+            const currentCombo = currentNecklaceIndex * Math.max(earrings.length, 1) + currentEarringIndex;
+            const newCombo = (currentCombo - 1 + totalCombos) % totalCombos;
+            
+            currentNecklaceIndex = Math.floor(newCombo / Math.max(earrings.length, 1));
+            currentEarringIndex = newCombo % Math.max(earrings.length, 1);
+            
+            selectNecklace(currentNecklaceIndex);
+            selectEarring(currentEarringIndex);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const totalCombos = Math.max(necklaces.length, 1) * Math.max(earrings.length, 1);
+            if (totalCombos <= 1) return;
+            
+            const currentCombo = currentNecklaceIndex * Math.max(earrings.length, 1) + currentEarringIndex;
+            const newCombo = (currentCombo + 1) % totalCombos;
+            
+            currentNecklaceIndex = Math.floor(newCombo / Math.max(earrings.length, 1));
+            currentEarringIndex = newCombo % Math.max(earrings.length, 1);
+            
+            selectNecklace(currentNecklaceIndex);
+            selectEarring(currentEarringIndex);
+        });
+
+        loadJewelryImages();
+        loadModels();
+    </script>
+</body>
+</html>
