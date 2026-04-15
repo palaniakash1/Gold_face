@@ -4,7 +4,7 @@
 
 **Gold Face** is a virtual jewelry try-on application using computer vision. It has two implementations:
 - **Desktop App**: Python/OpenCV with dlib face detection (`new_main.py`)
-- **Web App**: Browser-based with face-api.js (`webapp/index.html`)
+- **Web App**: Browser-based with MediaPipe Face Mesh (`webapp/index.html`)
 
 ## Running the Project
 
@@ -28,6 +28,18 @@ python new_main.py
 ### Project Launcher
 ```bash
 python run_project.py
+```
+
+### MediaPipe Face Mesh (Web App)
+The webapp uses **MediaPipe Face Mesh** for face detection with 468 landmarks:
+- **Ear landmarks**: 234 (left), 454 (right) - actual ear outer points
+- **Chin landmark**: 152
+- **Nose tip**: 1
+
+CDN URLs:
+```
+https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js
+https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js
 ```
 
 ## Build/Test/Lint Commands
