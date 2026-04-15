@@ -498,7 +498,7 @@
                     <video id="video" autoplay playsinline muted></video>
                     <canvas id="canvas"></canvas>
                     
-                    <div class="status-bar loading" id="status">Loading models...</div>
+                    <div class="status-bar loading" id="status">Loading AI model...</div>
                     
                     <div class="camera-overlay">
                         <div class="jewelry-label" id="currentCombo">Necklace 1 + Earring 1</div>
@@ -553,8 +553,11 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-    <script>
+    <script type="module">
+        import { Camera } from 'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js';
+        import { FaceMesh } from 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js';
+        import { drawLandmarks, drawConnectors } from 'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js';
+
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -575,39 +578,56 @@
         let earrings = [];
         let currentNecklaceIndex = 0;
         let currentEarringIndex = 0;
-        let isModelLoaded = false;
-        let currentModalType = null;
+        let faceMesh = null;
+        let currentLandmarks = null;
 
-        let scaleX = 1;
-        let scaleY = 1;
+        // MediaPipe Face Mesh landmark indices
+        const LANDMARKS = {
+            // Ears
+            LEFT_TRAGUS: 33,        // Left ear tragus (ear hole)
+            RIGHT_TRAGUS: 263,      // Right ear tragus
+            LEFT_EAR_OUTER: 234,   // Left ear outer
+            RIGHT_EAR_OUTER: 454,   // Right ear outer
+            LEFT_TEMPLE: 127,       // Left temple
+            RIGHT_TEMPLE: 356,     // Right temple
+            // Face outline
+            CHIN: 152,
+            LEFT_CHIN: 234,
+            RIGHT_CHIN: 454,
+            // Eyes
+            LEFT_EYE_OUTER: 33,
+            RIGHT_EYE_OUTER: 263,
+            // Nose
+            NOSE_TIP: 1,
+            NOSE_BOTTOM: 2,
+            NOSE_LEFT: 49,
+            NOSE_RIGHT: 275,
+        };
 
-        function updateCameraSize() {
-            const wrapper = video.parentElement;
-            const rect = wrapper.getBoundingClientRect();
-            
-            scaleX = video.videoWidth / rect.width;
-            scaleY = video.videoHeight / rect.height;
-            
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-        }
-
-        async function loadModels() {
+        async function initFaceMesh() {
             try {
-                status.textContent = 'Loading AI models...';
+                status.textContent = 'Loading AI model...';
                 status.className = 'status-bar loading';
                 
-                await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
-                await faceapi.nets.faceLandmark68TinyNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
+                faceMesh = new FaceMesh({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/${file}`
+                });
                 
-                isModelLoaded = true;
-                status.textContent = 'Ready';
-                status.className = 'status-bar success';
-                setTimeout(() => status.style.display = 'none', 2000);
+                faceMesh.setOptions({
+                    maxNumFaces: 1,
+                    refineLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
                 
+                faceMesh.onResults(onResults);
+                
+                await faceMesh.initialize();
+                
+                status.textContent = 'Starting camera...';
                 startCamera();
             } catch (error) {
-                console.error('Error loading models:', error);
+                console.error('Error initializing FaceMesh:', error);
                 status.textContent = 'Model load failed';
                 status.className = 'status-bar error';
             }
@@ -625,9 +645,8 @@
                 video.srcObject = stream;
                 
                 video.onloadedmetadata = () => {
-                    updateCameraSize();
                     video.play();
-                    detectFaces();
+                    processFrame();
                 };
             } catch (error) {
                 console.error('Error accessing camera:', error);
@@ -636,58 +655,61 @@
             }
         }
 
-        function getFaceDimensions(landmarks, wrapperRect) {
-            const jaw = landmarks.getJawOutline();
-            const leftEar = jaw[0];
-            const rightEar = jaw[16];
-            const chin = jaw[8];
-            const nose = landmarks.getNose();
-            const forehead = nose[2];
+        async function processFrame() {
+            if (faceMesh && video.readyState >= 2) {
+                await faceMesh.send({ image: video });
+            }
+            requestAnimationFrame(processFrame);
+        }
+
+        function onResults(results) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
             
-            const chinX = (chin.x / scaleX);
-            const chinY = (chin.y / scaleY);
-            const leftEarX = (leftEar.x / scaleX);
-            const leftEarY = (leftEar.y / scaleY);
-            const rightEarX = (rightEar.x / scaleX);
-            const rightEarY = (rightEar.y / scaleY);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                currentLandmarks = results.multiFaceLandmarks[0];
+                
+                drawNecklace();
+                drawEarrings();
+                
+                if (status.className === 'status-bar loading') {
+                    status.textContent = 'Ready';
+                    status.className = 'status-bar success';
+                    setTimeout(() => status.style.display = 'none', 2000);
+                }
+            }
+        }
+
+        function getLandmark(idx) {
+            if (!currentLandmarks || !currentLandmarks[idx]) return null;
+            const lm = currentLandmarks[idx];
             return {
-                width: Math.hypot(rightEarX - leftEarX, rightEarY - leftEarY),
-                height: Math.hypot(chinX - chinX, chinY - forehead.y / scaleY) * 1.2,
-                chin: { x: chinX, y: chinY },
-                leftEar: { x: leftEarX, y: leftEarY },
-                rightEar: { x: rightEarX, y: rightEarY }
+                x: lm.x * canvas.width,
+                y: lm.y * canvas.height
             };
         }
 
-        async function detectFaces() {
-            if (!isModelLoaded) return;
-
-            const options = new faceapi.TinyFaceDetectorOptions({
-                inputSize: 416,
-                scoreThreshold: 0.4
-            });
-
-            async function detect() {
-                if (!video.paused && !video.ended) {
-                    const wrapper = video.parentElement;
-                    const wrapperRect = wrapper.getBoundingClientRect();
-                    
-                    const detections = await faceapi.detectAllFaces(video, options)
-                        .withFaceLandmarks(true);
-
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    
-                    if (detections.length > 0) {
-                        const landmarks = detections[0].landmarks;
-                        const faceDims = getFaceDimensions(landmarks, wrapperRect);
-                        drawNecklace(landmarks, faceDims);
-                        drawEarrings(landmarks, faceDims);
-                    }
-                }
-                requestAnimationFrame(detect);
-            }
-            detect();
+        function getFaceDimensions() {
+            const leftEar = getLandmark(LANDMARKS.LEFT_EAR_OUTER);
+            const rightEar = getLandmark(LANDMARKS.RIGHT_EAR_OUTER);
+            const chin = getLandmark(LANDMARKS.CHIN);
+            const noseTip = getLandmark(LANDMARKS.NOSE_TIP);
+            
+            if (!leftEar || !rightEar || !chin || !noseTip) return null;
+            
+            const faceWidth = Math.hypot(rightEar.x - leftEar.x, rightEar.y - leftEar.y);
+            const faceHeight = Math.hypot(noseTip.x - chin.x, noseTip.y - chin.y);
+            
+            return {
+                width: faceWidth,
+                height: faceHeight,
+                chin: chin,
+                leftEar: leftEar,
+                rightEar: rightEar,
+                noseTip: noseTip
+            };
         }
 
         function removeBackground(image) {
@@ -723,49 +745,54 @@
             return tempCanvas;
         }
 
-        function getNecklacePosition(landmarks, faceDims) {
+        function getNecklacePosition(faceDims) {
             const chin = faceDims.chin;
-            const width = faceDims.width * 0.9;
-            const height = faceDims.width * 0.3;
+            const faceWidth = faceDims.width;
+            
+            const width = faceWidth * 0.9;
+            const height = faceWidth * 0.25;
             
             return {
                 x: chin.x - width / 2,
-                y: chin.y + faceDims.width * 0.08,
+                y: chin.y + faceWidth * 0.02,
                 width: width,
                 height: height
             };
         }
 
-        function getEarringPositions(landmarks, faceDims) {
+        function getEarringPositions(faceDims) {
+            const faceWidth = faceDims.width;
             const leftEar = faceDims.leftEar;
             const rightEar = faceDims.rightEar;
-            const faceWidth = faceDims.width;
             
-            const earWidth = faceWidth * 0.15;
+            const earWidth = faceWidth * 0.12;
             const earHeight = earWidth * 2.0;
             
             return {
                 left: {
-                    x: leftEar.x - earWidth * 0.1,
-                    y: leftEar.y + faceWidth * 0.12,
+                    x: leftEar.x - earWidth * 0.5,
+                    y: leftEar.y + faceWidth * 0.08,
                     width: earWidth,
                     height: earHeight
                 },
                 right: {
-                    x: rightEar.x - earWidth * 0.9,
-                    y: rightEar.y + faceWidth * 0.12,
+                    x: rightEar.x - earWidth * 0.5,
+                    y: rightEar.y + faceWidth * 0.08,
                     width: earWidth,
                     height: earHeight
                 }
             };
         }
 
-        function drawNecklace(landmarks, faceDims) {
-            if (necklaces.length === 0) return;
+        function drawNecklace() {
+            if (necklaces.length === 0 || !currentLandmarks) return;
             const necklace = necklaces[currentNecklaceIndex];
             if (!necklace || !necklace.loaded) return;
             
-            const pos = getNecklacePosition(landmarks, faceDims);
+            const faceDims = getFaceDimensions();
+            if (!faceDims) return;
+            
+            const pos = getNecklacePosition(faceDims);
             
             if (!necklace.processed) {
                 necklace.processed = removeBackground(necklace.img);
@@ -774,12 +801,15 @@
             ctx.drawImage(necklace.processed, pos.x, pos.y, pos.width, pos.height);
         }
 
-        function drawEarrings(landmarks, faceDims) {
-            if (earrings.length === 0) return;
+        function drawEarrings() {
+            if (earrings.length === 0 || !currentLandmarks) return;
             const earring = earrings[currentEarringIndex];
             if (!earring || !earring.loaded) return;
             
-            const pos = getEarringPositions(landmarks, faceDims);
+            const faceDims = getFaceDimensions();
+            if (!faceDims) return;
+            
+            const pos = getEarringPositions(faceDims);
             const img = earring.img;
             const halfWidth = img.width / 2;
             
@@ -1007,12 +1037,8 @@
             updateCurrentCombo();
         });
 
-        window.addEventListener('resize', () => {
-            if (isModelLoaded) updateCameraSize();
-        });
-
         loadJewelryImages();
-        loadModels();
+        initFaceMesh();
     </script>
 </body>
 </html>
