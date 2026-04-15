@@ -2,69 +2,118 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gold Face - Virtual Jewelry Try-On</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --cream-50: #FDFBF7;
+            --cream-100: #FAF7F0;
+            --cream-200: #F5EFE4;
+            --cream-300: #EBE0CC;
+            --brown-500: #8B7355;
+            --brown-600: #6B5344;
+            --brown-700: #5C4535;
+            --brown-800: #3D2E24;
+            --brown-900: #2A1F17;
+            --gold-400: #D4AF37;
+            --gold-500: #C9A227;
+            --gold-600: #B8960F;
+            --shadow-sm: 0 2px 8px rgba(42, 31, 23, 0.08);
+            --shadow-md: 0 4px 20px rgba(42, 31, 23, 0.12);
+            --shadow-lg: 0 8px 40px rgba(42, 31, 23, 0.16);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            color: #fff;
+        html, body {
+            height: 100%;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, var(--cream-100) 0%, var(--cream-200) 100%);
+            min-height: 100vh;
+            color: var(--brown-800);
+            line-height: 1.6;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         header {
-            text-align: center;
-            padding: 20px 0;
+            padding: 16px 20px;
+            background: var(--cream-50);
+            border-bottom: 1px solid var(--cream-300);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
         }
 
-        header h1 {
-            font-size: 2.5rem;
-            background: linear-gradient(90deg, #ffd700, #ffb347, #ffd700);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        header p {
-            color: #aaa;
-            margin-top: 5px;
-        }
-
-        .main-content {
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--brown-800);
+            letter-spacing: 0.02em;
             display: flex;
-            gap: 30px;
-            margin-top: 20px;
-        }
-
-        .camera-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
             align-items: center;
+            gap: 8px;
         }
 
-        .video-container {
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            fill: var(--gold-500);
+        }
+
+        .logo span {
+            color: var(--gold-500);
+        }
+
+        main {
+            flex: 1;
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+
+        .camera-wrapper {
             position: relative;
-            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.2);
-            background: #000;
+            box-shadow: var(--shadow-lg);
+            background: var(--brown-900);
+            aspect-ratio: 4/5;
+            max-height: 70vh;
+        }
+
+        .camera-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 2px solid var(--cream-300);
+            border-radius: 24px;
+            pointer-events: none;
+            z-index: 2;
         }
 
         #video {
-            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             transform: scaleX(-1);
         }
 
@@ -72,336 +121,434 @@
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             transform: scaleX(-1);
         }
 
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
+        .camera-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(transparent, rgba(42, 31, 23, 0.7));
+            z-index: 3;
         }
 
-        .btn {
-            padding: 12px 30px;
-            font-size: 1rem;
+        .jewelry-label {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            color: var(--cream-100);
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .nav-btn {
+            flex: 1;
+            max-width: 140px;
+            padding: 12px 20px;
+            background: var(--cream-50);
             border: none;
-            border-radius: 30px;
+            border-radius: 50px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--brown-700);
             cursor: pointer;
             transition: all 0.3s ease;
-            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
-        .btn-prev, .btn-next {
-            background: linear-gradient(135deg, #ffd700, #ffb347);
-            color: #1a1a2e;
+        .nav-btn:active {
+            transform: scale(0.96);
         }
 
-        .btn-prev:hover, .btn-next:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        .nav-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--brown-600);
         }
 
-        .btn-prev:disabled, .btn-next:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+        .status-bar {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            padding: 12px 16px;
+            background: rgba(253, 251, 247, 0.95);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            text-align: center;
+            z-index: 10;
+            box-shadow: var(--shadow-sm);
         }
 
-        .btn-add {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 8px 15px;
-            font-size: 0.85rem;
+        .status-bar.loading {
+            color: var(--brown-600);
         }
 
-        .btn-add:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .status-bar.success {
+            color: var(--brown-700);
+        }
+
+        .status-bar.error {
+            color: #B85450;
+            background: rgba(253, 251, 247, 0.98);
         }
 
         .gallery-section {
-            width: 350px;
+            margin-top: 24px;
         }
 
-        .gallery-title {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            color: #ffd700;
-        }
-
-        .gallery {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .gallery-category {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 15px;
-        }
-
-        .category-header {
+        .gallery-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
+            padding: 0 4px;
         }
 
-        .category-title {
-            font-size: 0.9rem;
-            color: #aaa;
+        .gallery-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--brown-800);
+        }
+
+        .add-url-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1.5px solid var(--brown-500);
+            border-radius: 50px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--brown-600);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-url-btn:active {
+            background: var(--brown-500);
+            color: var(--cream-50);
+        }
+
+        .gallery-category {
+            margin-bottom: 20px;
+        }
+
+        .category-label {
+            font-size: 0.7rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.1em;
+            color: var(--brown-500);
+            margin-bottom: 10px;
+            padding-left: 4px;
         }
 
-        .thumbnail-grid {
+        .thumbnail-scroll {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 4px;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .thumbnail-scroll::-webkit-scrollbar {
+            display: none;
         }
 
         .thumbnail {
-            width: 70px;
-            height: 70px;
-            border-radius: 10px;
+            flex-shrink: 0;
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
             cursor: pointer;
-            border: 3px solid transparent;
+            border: 2px solid transparent;
             transition: all 0.3s ease;
+            background: var(--cream-50);
+            padding: 8px;
             object-fit: contain;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 5px;
         }
 
         .thumbnail:hover {
-            transform: scale(1.1);
-            border-color: #ffd700;
+            border-color: var(--gold-400);
         }
 
         .thumbnail.active {
-            border-color: #ffd700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            border-color: var(--gold-500);
+            box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
         }
 
-        .url-input-container {
-            margin-top: 10px;
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(42, 31, 23, 0.6);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
             display: flex;
-            gap: 5px;
-        }
-
-        .url-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            color: #fff;
-            font-size: 0.8rem;
-        }
-
-        .url-input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        .status {
-            text-align: center;
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-        }
-
-        .status.loading {
-            background: rgba(255, 215, 0, 0.1);
-            color: #ffd700;
-        }
-
-        .status.error {
-            background: rgba(255, 100, 100, 0.1);
-            color: #ff6464;
-        }
-
-        .status.success {
-            background: rgba(100, 255, 100, 0.1);
-            color: #64ff64;
-        }
-
-        .jewelry-info {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-
-        .jewelry-info span {
-            color: #ffd700;
-            font-weight: 600;
         }
 
         .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            max-width: 480px;
+            background: var(--cream-50);
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            padding-bottom: max(24px, env(safe-area-inset-bottom));
+            animation: slideUp 0.3s ease;
         }
 
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: #1a1a2e;
-            border-radius: 15px;
-            padding: 25px;
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .modal-content h3 {
-            margin-bottom: 15px;
-            color: #ffd700;
-        }
-
-        .modal-content input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            color: #fff;
-            font-size: 0.9rem;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .modal-buttons button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .modal-buttons .cancel {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        .modal-buttons .add {
-            background: linear-gradient(135deg, #ffd700, #ffb347);
-            color: #1a1a2e;
-        }
-
-        .bg-remove-options {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .url-hint {
-            font-size: 0.75rem;
-            color: #888;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-
-        .url-hint strong {
-            color: #aaa;
-        }
-
-        @media (max-width: 900px) {
-            .main-content {
-                flex-direction: column;
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
             }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-handle {
+            width: 40px;
+            height: 4px;
+            background: var(--cream-300);
+            border-radius: 2px;
+            margin: 0 auto 20px;
+        }
+
+        .modal-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--brown-800);
+            margin-bottom: 8px;
+        }
+
+        .modal-hint {
+            font-size: 0.75rem;
+            color: var(--brown-500);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-hint strong {
+            color: var(--brown-600);
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid var(--cream-300);
+            border-radius: 12px;
+            background: var(--cream-100);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            color: var(--brown-800);
+            transition: border-color 0.3s ease;
+        }
+
+        .url-input::placeholder {
+            color: var(--brown-500);
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--gold-500);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.cancel {
+            background: var(--cream-200);
+            color: var(--brown-600);
+        }
+
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, var(--gold-500) 0%, var(--gold-600) 100%);
+            color: var(--cream-50);
+        }
+
+        .modal-btn:active {
+            transform: scale(0.98);
+        }
+
+        @media (min-width: 768px) {
+            main {
+                display: flex;
+                gap: 32px;
+                max-width: 1100px;
+                margin: 0 auto;
+                padding: 32px;
+                padding-bottom: 32px;
+            }
+
+            .camera-column {
+                flex: 1;
+                max-width: 420px;
+            }
+
+            .gallery-column {
+                flex: 1;
+                max-width: 400px;
+            }
+
+            .camera-wrapper {
+                max-height: none;
+                aspect-ratio: 3/4;
+            }
+
             .gallery-section {
-                width: 100%;
+                margin-top: 0;
+            }
+
+            .modal-overlay {
+                align-items: center;
+            }
+
+            .modal {
+                border-radius: 24px;
+                max-width: 440px;
+            }
+
+            @keyframes slideUp {
+                from {
+                    transform: translateY(20px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            header {
+                padding: 20px 32px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            main {
+                gap: 48px;
+            }
+
+            .camera-column {
+                max-width: 500px;
+            }
+
+            .gallery-column {
+                max-width: 450px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="app">
         <header>
-            <h1>Gold Face</h1>
-            <p>Virtual Jewelry Try-On</p>
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                Gold<span>Face</span>
+            </div>
         </header>
 
-        <div class="main-content">
-            <div class="camera-section">
-                <div class="video-container">
-                    <video id="video" width="640" height="480" autoplay playsinline></video>
-                    <canvas id="canvas" width="640" height="480"></canvas>
+        <main>
+            <div class="camera-column">
+                <div class="camera-wrapper">
+                    <video id="video" autoplay playsinline muted></video>
+                    <canvas id="canvas"></canvas>
+                    
+                    <div class="status-bar loading" id="status">Loading models...</div>
+                    
+                    <div class="camera-overlay">
+                        <div class="jewelry-label" id="currentCombo">Necklace 1 + Earring 1</div>
+                        <div class="nav-buttons">
+                            <button class="nav-btn" id="prevBtn">
+                                <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                                Prev
+                            </button>
+                            <button class="nav-btn" id="nextBtn">
+                                Next
+                                <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="controls">
-                    <button class="btn btn-prev" id="prevBtn">&#9664; Previous</button>
-                    <button class="btn btn-next" id="nextBtn">Next &#9654;</button>
-                </div>
-
-                <div class="jewelry-info" id="jewelryInfo">
-                    Wearing: <span id="currentCombo">Necklace 1 + Earring 1</span>
-                </div>
-
-                <div class="status loading" id="status">Loading face detection model...</div>
             </div>
 
-            <div class="gallery-section">
-                <h3 class="gallery-title">Jewelry Collection</h3>
-                
-                <div class="gallery">
-                    <div class="gallery-category">
-                        <div class="category-header">
-                            <span class="category-title">Necklaces</span>
-                            <button class="btn btn-add" id="addNecklaceBtn">+ Add URL</button>
-                        </div>
-                        <div class="thumbnail-grid" id="necklaceGallery"></div>
-                        <div class="url-input-container" id="necklaceUrlContainer" style="display: none;">
-                            <input type="text" class="url-input" id="necklaceUrl" placeholder="Paste image URL...">
-                            <button class="btn btn-add" id="loadNecklaceUrl">Load</button>
-                        </div>
+            <div class="gallery-column">
+                <div class="gallery-section">
+                    <div class="gallery-header">
+                        <h2 class="gallery-title">Collection</h2>
+                        <button class="add-url-btn" id="addCustomBtn">+ Add Custom</button>
                     </div>
                     
                     <div class="gallery-category">
-                        <div class="category-header">
-                            <span class="category-title">Earrings</span>
-                            <button class="btn btn-add" id="addEarringBtn">+ Add URL</button>
-                        </div>
-                        <div class="thumbnail-grid" id="earringGallery"></div>
-                        <div class="url-input-container" id="earringUrlContainer" style="display: none;">
-                            <input type="text" class="url-input" id="earringUrl" placeholder="Paste image URL...">
-                            <button class="btn btn-add" id="loadEarringUrl">Load</button>
-                        </div>
+                        <div class="category-label">Necklaces</div>
+                        <div class="thumbnail-scroll" id="necklaceGallery"></div>
+                    </div>
+                    
+                    <div class="gallery-category">
+                        <div class="category-label">Earrings</div>
+                        <div class="thumbnail-scroll" id="earringGallery"></div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <div class="modal" id="urlModal">
-        <div class="modal-content">
-            <h3 id="modalTitle">Add Custom Jewelry</h3>
-            
-            <input type="text" id="customUrlInput" placeholder="Paste direct image URL (PNG/JPG)...">
-            
-            <div class="url-hint">
-                <small><strong>Works:</strong> imgur.com, imgbb.com, postimages.org, direct .png/.jpg links<br>
-                <strong>Doesn't work:</strong> Pinterest, Instagram, Facebook, Twitter<br>
-                <strong>Earrings:</strong> Use single image with left+right side-by-side</small>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="cancel" id="modalCancel">Cancel</button>
-                <button class="add" id="modalAdd">Add</button>
+    <div class="modal-overlay" id="urlModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <h3 class="modal-title" id="modalTitle">Add Custom Jewelry</h3>
+            <p class="modal-hint">
+                Paste a direct image URL. Works with: <strong>imgur, imgbb, postimages</strong><br>
+                <strong>Earrings:</strong> Use left+right side-by-side image
+            </p>
+            <input type="text" class="url-input" id="customUrlInput" placeholder="https://example.com/image.png">
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn confirm" id="modalAdd">Add</button>
             </div>
         </div>
     </div>
@@ -417,6 +564,12 @@
         const currentComboEl = document.getElementById('currentCombo');
         const necklaceGallery = document.getElementById('necklaceGallery');
         const earringGallery = document.getElementById('earringGallery');
+        const urlModal = document.getElementById('urlModal');
+        const customUrlInput = document.getElementById('customUrlInput');
+        const modalTitle = document.getElementById('modalTitle');
+        const addCustomBtn = document.getElementById('addCustomBtn');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalAdd = document.getElementById('modalAdd');
 
         let necklaces = [];
         let earrings = [];
@@ -425,23 +578,38 @@
         let isModelLoaded = false;
         let currentModalType = null;
 
+        let scaleX = 1;
+        let scaleY = 1;
+
+        function updateCameraSize() {
+            const wrapper = video.parentElement;
+            const rect = wrapper.getBoundingClientRect();
+            
+            scaleX = video.videoWidth / rect.width;
+            scaleY = video.videoHeight / rect.height;
+            
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
         async function loadModels() {
             try {
-                status.textContent = 'Loading face detection models...';
-                status.className = 'status loading';
+                status.textContent = 'Loading AI models...';
+                status.className = 'status-bar loading';
                 
                 await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
                 await faceapi.nets.faceLandmark68TinyNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
                 
                 isModelLoaded = true;
-                status.textContent = 'Models loaded! Starting camera...';
-                status.className = 'status success';
+                status.textContent = 'Ready';
+                status.className = 'status-bar success';
+                setTimeout(() => status.style.display = 'none', 2000);
                 
                 startCamera();
             } catch (error) {
                 console.error('Error loading models:', error);
-                status.textContent = 'Error loading models. Please refresh the page.';
-                status.className = 'status error';
+                status.textContent = 'Model load failed';
+                status.className = 'status-bar error';
             }
         }
 
@@ -449,25 +617,26 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
-                        width: 640, 
-                        height: 480,
-                        facingMode: 'user'
+                        facingMode: 'user',
+                        width: { ideal: 720 },
+                        height: { ideal: 960 }
                     } 
                 });
                 video.srcObject = stream;
                 
                 video.onloadedmetadata = () => {
+                    updateCameraSize();
                     video.play();
                     detectFaces();
                 };
             } catch (error) {
                 console.error('Error accessing camera:', error);
-                status.textContent = 'Camera access denied. Please allow camera permission.';
-                status.className = 'status error';
+                status.textContent = 'Camera access denied';
+                status.className = 'status-bar error';
             }
         }
 
-        function getFaceDimensions(landmarks) {
+        function getFaceDimensions(landmarks, wrapperRect) {
             const jaw = landmarks.getJawOutline();
             const leftEar = jaw[0];
             const rightEar = jaw[16];
@@ -475,44 +644,35 @@
             const nose = landmarks.getNose();
             const forehead = nose[2];
             
-            const faceWidth = Math.sqrt(
-                Math.pow(rightEar.x - leftEar.x, 2) + 
-                Math.pow(rightEar.y - leftEar.y, 2)
-            );
-            
-            const faceHeight = Math.sqrt(
-                Math.pow(forehead.x - chin.x, 2) + 
-                Math.pow(forehead.y - chin.y, 2)
-            );
-            
-            const faceCenter = {
-                x: (leftEar.x + rightEar.x) / 2,
-                y: (leftEar.y + rightEar.y) / 2 + faceHeight * 0.1
-            };
+            const chinX = (chin.x / scaleX);
+            const chinY = (chin.y / scaleY);
+            const leftEarX = (leftEar.x / scaleX);
+            const leftEarY = (leftEar.y / scaleY);
+            const rightEarX = (rightEar.x / scaleX);
+            const rightEarY = (rightEar.y / scaleY);
             
             return {
-                width: faceWidth,
-                height: faceHeight,
-                center: faceCenter,
-                chin: chin,
-                leftEar: leftEar,
-                rightEar: rightEar
+                width: Math.hypot(rightEarX - leftEarX, rightEarY - leftEarY),
+                height: Math.hypot(chinX - chinX, chinY - forehead.y / scaleY) * 1.2,
+                chin: { x: chinX, y: chinY },
+                leftEar: { x: leftEarX, y: leftEarY },
+                rightEar: { x: rightEarX, y: rightEarY }
             };
         }
 
         async function detectFaces() {
             if (!isModelLoaded) return;
 
-            const displaySize = { width: video.width, height: video.height };
-            faceapi.matchDimensions(canvas, displaySize);
-
             const options = new faceapi.TinyFaceDetectorOptions({
-                inputSize: 320,
-                scoreThreshold: 0.5
+                inputSize: 416,
+                scoreThreshold: 0.4
             });
 
             async function detect() {
                 if (!video.paused && !video.ended) {
+                    const wrapper = video.parentElement;
+                    const wrapperRect = wrapper.getBoundingClientRect();
+                    
                     const detections = await faceapi.detectAllFaces(video, options)
                         .withFaceLandmarks(true);
 
@@ -520,7 +680,7 @@
                     
                     if (detections.length > 0) {
                         const landmarks = detections[0].landmarks;
-                        const faceDims = getFaceDimensions(landmarks);
+                        const faceDims = getFaceDimensions(landmarks, wrapperRect);
                         drawNecklace(landmarks, faceDims);
                         drawEarrings(landmarks, faceDims);
                     }
@@ -537,41 +697,25 @@
             const tempCtx = tempCanvas.getContext('2d');
             
             tempCtx.drawImage(image, 0, 0);
-            
             const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
             const data = imageData.data;
             
-            const width = tempCanvas.width;
-            const height = tempCanvas.height;
-            const centerX = width / 2;
-            const centerY = height / 2;
-            
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const i = (y * width + x) * 4;
-                    const r = data[i];
-                    const g = data[i + 1];
-                    const b = data[i + 2];
-                    const a = data[i + 3];
-                    
-                    if (a < 10) continue;
-                    
-                    const brightness = (r + g + b) / 3;
-                    const saturation = Math.max(Math.abs(r - brightness), Math.abs(g - brightness), Math.abs(b - brightness));
-                    
-                    const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-                    const maxDist = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
-                    const normalizedDist = distFromCenter / maxDist;
-                    
-                    const threshold = 250 - (normalizedDist * 50);
-                    
-                    if (brightness > threshold && saturation < 15) {
-                        data[i + 3] = 0;
-                    }
-                    
-                    if (r < 15 && g < 15 && b < 15) {
-                        data[i + 3] = 0;
-                    }
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                const brightness = (r + g + b) / 3;
+                const maxRGB = Math.max(r, g, b);
+                const minRGB = Math.min(r, g, b);
+                const saturation = maxRGB === 0 ? 0 : (maxRGB - minRGB) / maxRGB;
+                
+                const isWhite = r > 230 && g > 230 && b > 230 && saturation < 0.15;
+                const isBlack = r < 25 && g < 25 && b < 25;
+                const isGray = brightness > 220 && saturation < 0.08;
+                
+                if (isWhite || isBlack || isGray) {
+                    data[i + 3] = 0;
                 }
             }
             
@@ -580,50 +724,36 @@
         }
 
         function getNecklacePosition(landmarks, faceDims) {
-            const jaw = landmarks.getJawOutline();
-            const chin = jaw[8];
-            
-            const width = faceDims.width * 0.85;
-            const height = faceDims.width * 0.25;
+            const chin = faceDims.chin;
+            const width = faceDims.width * 0.9;
+            const height = faceDims.width * 0.3;
             
             return {
                 x: chin.x - width / 2,
-                y: chin.y + faceDims.width * 0.05,
+                y: chin.y + faceDims.width * 0.08,
                 width: width,
                 height: height
             };
         }
 
         function getEarringPositions(landmarks, faceDims) {
-            const jaw = landmarks.getJawOutline();
-            const leftEar = jaw[0];
-            const rightEar = jaw[16];
-            
+            const leftEar = faceDims.leftEar;
+            const rightEar = faceDims.rightEar;
             const faceWidth = faceDims.width;
             
-            const earWidth = faceWidth * 0.12;
-            const earHeight = earWidth * 2.2;
-            
-            const leftEarLobe = {
-                x: leftEar.x + faceWidth * 0.02,
-                y: leftEar.y + faceWidth * 0.15
-            };
-            
-            const rightEarLobe = {
-                x: rightEar.x - faceWidth * 0.14,
-                y: rightEar.y + faceWidth * 0.15
-            };
+            const earWidth = faceWidth * 0.15;
+            const earHeight = earWidth * 2.0;
             
             return {
                 left: {
-                    x: leftEarLobe.x,
-                    y: leftEarLobe.y,
+                    x: leftEar.x - earWidth * 0.1,
+                    y: leftEar.y + faceWidth * 0.12,
                     width: earWidth,
                     height: earHeight
                 },
                 right: {
-                    x: rightEarLobe.x,
-                    y: rightEarLobe.y,
+                    x: rightEar.x - earWidth * 0.9,
+                    y: rightEar.y + faceWidth * 0.12,
                     width: earWidth,
                     height: earHeight
                 }
@@ -632,38 +762,25 @@
 
         function drawNecklace(landmarks, faceDims) {
             if (necklaces.length === 0) return;
-            
             const necklace = necklaces[currentNecklaceIndex];
             if (!necklace || !necklace.loaded) return;
             
             const pos = getNecklacePosition(landmarks, faceDims);
             
-            let processedCanvas;
-            if (necklace.processed) {
-                processedCanvas = necklace.processed;
-            } else {
-                processedCanvas = removeBackground(necklace.img);
-                necklace.processed = processedCanvas;
+            if (!necklace.processed) {
+                necklace.processed = removeBackground(necklace.img);
             }
             
-            ctx.drawImage(
-                processedCanvas,
-                pos.x,
-                pos.y,
-                pos.width,
-                pos.height
-            );
+            ctx.drawImage(necklace.processed, pos.x, pos.y, pos.width, pos.height);
         }
 
         function drawEarrings(landmarks, faceDims) {
             if (earrings.length === 0) return;
-            
             const earring = earrings[currentEarringIndex];
             if (!earring || !earring.loaded) return;
             
             const pos = getEarringPositions(landmarks, faceDims);
             const img = earring.img;
-            
             const halfWidth = img.width / 2;
             
             const tempCanvas = document.createElement('canvas');
@@ -671,83 +788,47 @@
             tempCanvas.height = img.height;
             const tempCtx = tempCanvas.getContext('2d');
             
-            let processedLeft;
-            if (earring.processedLeft) {
-                processedLeft = earring.processedLeft;
-            } else {
-                tempCtx.clearRect(0, 0, halfWidth, img.height);
+            if (!earring.processedLeft) {
                 tempCtx.drawImage(img, 0, 0, halfWidth, img.height, 0, 0, halfWidth, img.height);
-                processedLeft = removeBackgroundFromCanvas(tempCtx, halfWidth, img.height);
-                earring.processedLeft = processedLeft;
+                earring.processedLeft = removeBackgroundFromCanvas(tempCtx);
             }
             
-            let processedRight;
-            if (earring.processedRight) {
-                processedRight = earring.processedRight;
-            } else {
+            if (!earring.processedRight) {
                 tempCtx.clearRect(0, 0, halfWidth, img.height);
                 tempCtx.drawImage(img, halfWidth, 0, halfWidth, img.height, 0, 0, halfWidth, img.height);
-                processedRight = removeBackgroundFromCanvas(tempCtx, halfWidth, img.height);
-                earring.processedRight = processedRight;
+                earring.processedRight = removeBackgroundFromCanvas(tempCtx);
             }
             
-            ctx.drawImage(
-                processedLeft,
-                pos.left.x,
-                pos.left.y,
-                pos.left.width,
-                pos.left.height
-            );
-            
-            ctx.drawImage(
-                processedRight,
-                pos.right.x,
-                pos.right.y,
-                pos.right.width,
-                pos.right.height
-            );
+            ctx.drawImage(earring.processedLeft, pos.left.x, pos.left.y, pos.left.width, pos.left.height);
+            ctx.drawImage(earring.processedRight, pos.right.x, pos.right.y, pos.right.width, pos.right.height);
         }
 
-        function removeBackgroundFromCanvas(sourceCtx, width, height) {
+        function removeBackgroundFromCanvas(sourceCtx) {
             const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = sourceCtx.canvas.width;
+            canvas.height = sourceCtx.canvas.height;
             const targetCtx = canvas.getContext('2d');
             
             targetCtx.drawImage(sourceCtx.canvas, 0, 0);
-            
-            const imageData = targetCtx.getImageData(0, 0, width, height);
+            const imageData = targetCtx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
             
-            const centerX = width / 2;
-            const centerY = height / 2;
-            
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const i = (y * width + x) * 4;
-                    const r = data[i];
-                    const g = data[i + 1];
-                    const b = data[i + 2];
-                    const a = data[i + 3];
-                    
-                    if (a < 10) continue;
-                    
-                    const brightness = (r + g + b) / 3;
-                    const saturation = Math.max(Math.abs(r - brightness), Math.abs(g - brightness), Math.abs(b - brightness));
-                    
-                    const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-                    const maxDist = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
-                    const normalizedDist = distFromCenter / maxDist;
-                    
-                    const threshold = 250 - (normalizedDist * 50);
-                    
-                    if (brightness > threshold && saturation < 15) {
-                        data[i + 3] = 0;
-                    }
-                    
-                    if (r < 15 && g < 15 && b < 15) {
-                        data[i + 3] = 0;
-                    }
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                const brightness = (r + g + b) / 3;
+                const maxRGB = Math.max(r, g, b);
+                const minRGB = Math.min(r, g, b);
+                const saturation = maxRGB === 0 ? 0 : (maxRGB - minRGB) / maxRGB;
+                
+                const isWhite = r > 230 && g > 230 && b > 230 && saturation < 0.15;
+                const isBlack = r < 25 && g < 25 && b < 25;
+                const isGray = brightness > 220 && saturation < 0.08;
+                
+                if (isWhite || isBlack || isGray) {
+                    data[i + 3] = 0;
                 }
             }
             
@@ -764,14 +845,11 @@
                 img.crossOrigin = 'anonymous';
                 img.src = `jewelry/necklace/${name}`;
                 img.onload = () => {
-                    necklaces[index] = { img, loaded: true, bgMode: 'transparent', processed: null };
+                    necklaces[index] = { img, loaded: true };
                     addThumbnail(necklaceGallery, necklaces[index], index, 'necklace');
                     checkAllLoaded();
                 };
-                img.onerror = () => {
-                    console.error(`Failed to load ${name}`);
-                    checkAllLoaded();
-                };
+                img.onerror = () => checkAllLoaded();
             });
             
             earringNames.forEach((name, index) => {
@@ -779,14 +857,11 @@
                 img.crossOrigin = 'anonymous';
                 img.src = `jewelry/earring/${name}`;
                 img.onload = () => {
-                    earrings[index] = { img, loaded: true, bgMode: 'transparent', processedLeft: null, processedRight: null };
+                    earrings[index] = { img, loaded: true };
                     addThumbnail(earringGallery, earrings[index], index, 'earring');
                     checkAllLoaded();
                 };
-                img.onerror = () => {
-                    console.error(`Failed to load ${name}`);
-                    checkAllLoaded();
-                };
+                img.onerror = () => checkAllLoaded();
             });
         }
 
@@ -794,13 +869,9 @@
             const thumb = document.createElement('img');
             thumb.src = jewelry.img.src;
             thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
-            thumb.dataset.index = index;
-            thumb.dataset.type = type;
-            
             thumb.addEventListener('click', () => {
                 container.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
                 thumb.classList.add('active');
-                
                 if (type === 'necklace') {
                     currentNecklaceIndex = index;
                 } else {
@@ -808,175 +879,130 @@
                 }
                 updateCurrentCombo();
             });
-            
             container.appendChild(thumb);
         }
 
-        function addCustomJewelry(url, type) {
+        function checkAllLoaded() {
+            if (necklaces.filter(n => n?.loaded).length && earrings.filter(e => e?.loaded).length) {
+                updateCurrentCombo();
+            }
+        }
+
+        function updateCurrentCombo() {
+            currentComboEl.textContent = `Necklace ${currentNecklaceIndex + 1} + Earring ${currentEarringIndex + 1}`;
+        }
+
+        function showModal(type) {
+            currentModalType = type;
+            modalTitle.textContent = type === 'necklace' ? 'Add Custom Necklace' : 'Add Custom Earrings';
+            customUrlInput.value = '';
+            urlModal.classList.add('active');
+            setTimeout(() => customUrlInput.focus(), 300);
+        }
+
+        function hideModal() {
+            urlModal.classList.remove('active');
+            currentModalType = null;
+        }
+
+        function addCustomJewelry(url) {
             const blockedDomains = ['pinterest', 'pin.it', 'instagram', 'facebook', 'twitter'];
-            const isBlocked = blockedDomains.some(d => url.toLowerCase().includes(d));
-            
-            if (isBlocked) {
-                status.textContent = `Error: Social media URLs (Pinterest, Instagram, etc.) are blocked due to CORS policy`;
-                status.className = 'status error';
+            if (blockedDomains.some(d => url.toLowerCase().includes(d))) {
+                status.textContent = 'Social media URLs not supported';
+                status.className = 'status-bar error';
+                status.style.display = 'block';
                 setTimeout(() => {
-                    status.textContent = 'Ready! Point your face at the camera.';
-                    status.className = 'status success';
-                }, 4000);
-                closeModal();
+                    status.style.display = 'none';
+                }, 3000);
                 return;
             }
             
             const img = new Image();
             img.crossOrigin = 'anonymous';
             
-            const loadingStatus = status.textContent;
-            status.textContent = `Loading custom ${type}...`;
+            status.textContent = 'Loading image...';
+            status.className = 'status-bar loading';
+            status.style.display = 'block';
             
             img.onload = () => {
-                const jewelryArray = type === 'necklace' ? necklaces : earrings;
-                const gallery = type === 'necklace' ? necklaceGallery : earringGallery;
+                const jewelryArray = currentModalType === 'necklace' ? necklaces : earrings;
+                const gallery = currentModalType === 'necklace' ? necklaceGallery : earringGallery;
                 
-                const newJewelry = {
-                    img,
-                    loaded: true,
-                    processed: null,
-                    processedLeft: null,
-                    processedRight: null,
-                    isCustom: true
-                };
-                
+                const newJewelry = { img, loaded: true };
                 jewelryArray.push(newJewelry);
-                addThumbnail(gallery, newJewelry, jewelryArray.length - 1, type);
+                addThumbnail(gallery, newJewelry, jewelryArray.length - 1, currentModalType);
                 
-                if (type === 'necklace') {
+                if (currentModalType === 'necklace') {
                     currentNecklaceIndex = jewelryArray.length - 1;
-                    selectNecklace(currentNecklaceIndex);
                 } else {
                     currentEarringIndex = jewelryArray.length - 1;
-                    selectEarring(currentEarringIndex);
                 }
+                updateCurrentCombo();
                 
-                status.textContent = 'Ready! Point your face at the camera.';
-                status.className = 'status success';
+                status.textContent = 'Added!';
+                status.className = 'status-bar success';
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 2000);
                 
-                closeModal();
+                hideModal();
             };
             
             img.onerror = () => {
-                status.textContent = `Failed: Use direct image URLs (imgur, imgbb, etc.) - Pinterest/shortlinks not supported`;
-                status.className = 'status error';
+                status.textContent = 'Failed to load image';
+                status.className = 'status-bar error';
                 setTimeout(() => {
-                    status.textContent = loadingStatus;
-                    status.className = 'status success';
-                }, 4000);
-                closeModal();
+                    status.style.display = 'none';
+                }, 3000);
             };
             
             img.src = url;
         }
 
-        function checkAllLoaded() {
-            const loadedNecklaces = necklaces.filter(n => n && n.loaded).length;
-            const loadedEarrings = earrings.filter(e => e && e.loaded).length;
-            
-            if (loadedNecklaces > 0 && loadedEarrings > 0) {
-                status.textContent = 'Ready! Point your face at the camera.';
-                status.className = 'status success';
-                updateCurrentCombo();
-            }
-        }
-
-        function updateCurrentCombo() {
-            const necklaceNum = currentNecklaceIndex + 1;
-            const earringNum = currentEarringIndex + 1;
-            currentComboEl.textContent = `Necklace ${necklaceNum} + Earring ${earringNum}`;
-        }
-
-        function selectNecklace(index) {
-            currentNecklaceIndex = index;
-            document.querySelectorAll('#necklaceGallery .thumbnail').forEach((t, i) => {
-                t.classList.toggle('active', i === index);
-            });
-            updateCurrentCombo();
-        }
-
-        function selectEarring(index) {
-            currentEarringIndex = index;
-            document.querySelectorAll('#earringGallery .thumbnail').forEach((t, i) => {
-                t.classList.toggle('active', i === index);
-            });
-            updateCurrentCombo();
-        }
-
-        function showModal(type) {
-            currentModalType = type;
-            document.getElementById('modalTitle').textContent = 
-                type === 'necklace' ? 'Add Custom Necklace' : 'Add Custom Earrings';
-            document.getElementById('customUrlInput').value = '';
-            document.getElementById('customUrlInput').placeholder = 'Paste image URL...';
-            document.getElementById('urlModal').classList.add('active');
-            document.getElementById('customUrlInput').focus();
-        }
-
-        function closeModal() {
-            document.getElementById('urlModal').classList.remove('active');
-            currentModalType = null;
-        }
-
-        document.getElementById('addNecklaceBtn').addEventListener('click', () => showModal('necklace'));
-        document.getElementById('addEarringBtn').addEventListener('click', () => showModal('earring'));
-        
-        document.getElementById('modalCancel').addEventListener('click', closeModal);
-        
-        document.getElementById('modalAdd').addEventListener('click', () => {
-            const url = document.getElementById('customUrlInput').value.trim();
-            if (url && currentModalType) {
-                addCustomJewelry(url, currentModalType);
-            }
+        addCustomBtn.addEventListener('click', () => showModal('necklace'));
+        modalCancel.addEventListener('click', hideModal);
+        modalAdd.addEventListener('click', () => {
+            const url = customUrlInput.value.trim();
+            if (url) addCustomJewelry(url);
         });
-
-        document.getElementById('customUrlInput').addEventListener('keypress', (e) => {
+        customUrlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                const url = document.getElementById('customUrlInput').value.trim();
-                if (url && currentModalType) {
-                    addCustomJewelry(url, currentModalType);
-                }
+                const url = customUrlInput.value.trim();
+                if (url) addCustomJewelry(url);
             }
         });
-
-        document.getElementById('urlModal').addEventListener('click', (e) => {
-            if (e.target.id === 'urlModal') {
-                closeModal();
-            }
+        urlModal.addEventListener('click', (e) => {
+            if (e.target === urlModal) hideModal();
         });
 
         prevBtn.addEventListener('click', () => {
-            const totalCombos = Math.max(necklaces.length, 1) * Math.max(earrings.length, 1);
-            if (totalCombos <= 1) return;
+            const total = Math.max(necklaces.length, 1) * Math.max(earrings.length, 1);
+            if (total <= 1) return;
+            const current = currentNecklaceIndex * Math.max(earrings.length, 1) + currentEarringIndex;
+            const next = (current - 1 + total) % total;
+            currentNecklaceIndex = Math.floor(next / Math.max(earrings.length, 1));
+            currentEarringIndex = next % Math.max(earrings.length, 1);
             
-            const currentCombo = currentNecklaceIndex * Math.max(earrings.length, 1) + currentEarringIndex;
-            const newCombo = (currentCombo - 1 + totalCombos) % totalCombos;
-            
-            currentNecklaceIndex = Math.floor(newCombo / Math.max(earrings.length, 1));
-            currentEarringIndex = newCombo % Math.max(earrings.length, 1);
-            
-            selectNecklace(currentNecklaceIndex);
-            selectEarring(currentEarringIndex);
+            necklaceGallery.querySelectorAll('.thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentNecklaceIndex));
+            earringGallery.querySelectorAll('.thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentEarringIndex));
+            updateCurrentCombo();
         });
 
         nextBtn.addEventListener('click', () => {
-            const totalCombos = Math.max(necklaces.length, 1) * Math.max(earrings.length, 1);
-            if (totalCombos <= 1) return;
+            const total = Math.max(necklaces.length, 1) * Math.max(earrings.length, 1);
+            if (total <= 1) return;
+            const current = currentNecklaceIndex * Math.max(earrings.length, 1) + currentEarringIndex;
+            const next = (current + 1) % total;
+            currentNecklaceIndex = Math.floor(next / Math.max(earrings.length, 1));
+            currentEarringIndex = next % Math.max(earrings.length, 1);
             
-            const currentCombo = currentNecklaceIndex * Math.max(earrings.length, 1) + currentEarringIndex;
-            const newCombo = (currentCombo + 1) % totalCombos;
-            
-            currentNecklaceIndex = Math.floor(newCombo / Math.max(earrings.length, 1));
-            currentEarringIndex = newCombo % Math.max(earrings.length, 1);
-            
-            selectNecklace(currentNecklaceIndex);
-            selectEarring(currentEarringIndex);
+            necklaceGallery.querySelectorAll('.thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentNecklaceIndex));
+            earringGallery.querySelectorAll('.thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentEarringIndex));
+            updateCurrentCombo();
+        });
+
+        window.addEventListener('resize', () => {
+            if (isModelLoaded) updateCameraSize();
         });
 
         loadJewelryImages();
