@@ -180,6 +180,44 @@
             fill: var(--brown-600);
         }
 
+        .capture-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--gold-500);
+            border: 3px solid var(--cream-50);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .capture-btn:active {
+            transform: scale(0.92);
+        }
+
+        .capture-btn:hover {
+            background: var(--gold-600);
+        }
+
+        .capture-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--cream-50);
+        }
+
+        .capture-btn.captured {
+            animation: captureFlash 0.3s ease;
+        }
+
+        @keyframes captureFlash {
+            0% { transform: scale(1); background: var(--gold-500); }
+            50% { transform: scale(1.1); background: #fff; }
+            100% { transform: scale(1); background: var(--gold-500); }
+        }
+
         .status-bar {
             position: absolute;
             top: 16px;
@@ -650,6 +688,12 @@
                                 <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
                                 Prev
                             </button>
+                            <button class="capture-btn" id="captureBtn" title="Capture Photo">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="3.5"/>
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                                </svg>
+                            </button>
                             <button class="nav-btn" id="nextBtn">
                                 Next
                                 <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
@@ -740,6 +784,7 @@
         const status = document.getElementById('status');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
+        const captureBtn = document.getElementById('captureBtn');
         const currentComboEl = document.getElementById('currentCombo');
         const necklaceGallery = document.getElementById('necklaceGallery');
         const earringGallery = document.getElementById('earringGallery');
@@ -1294,6 +1339,48 @@
             necklaceGallery.querySelectorAll('.thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentNecklaceIndex));
             earringGallery.querySelectorAll('.thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentEarringIndex));
             updateCurrentCombo();
+        });
+
+        captureBtn.addEventListener('click', async () => {
+            captureBtn.classList.add('captured');
+            setTimeout(() => captureBtn.classList.remove('captured'), 300);
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            tempCtx.translate(tempCanvas.width, 0);
+            tempCtx.scale(-1, 1);
+
+            tempCtx.drawImage(video, 0, 0);
+            tempCtx.drawImage(canvas, 0, 0);
+
+            tempCtx.setTransform(1, 0, 0, 1, 0, 0);
+            tempCtx.translate(tempCanvas.width, 0);
+            tempCtx.scale(-1, 1);
+
+            const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
+
+            try {
+                const response = await fetch('/save-capture', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: dataUrl })
+                });
+
+                const result = await response.json();
+
+                status.textContent = result.success ? 'Photo saved!' : 'Failed to save photo';
+                status.className = result.success ? 'status-bar success' : 'status-bar error';
+                status.style.display = 'block';
+                setTimeout(() => status.style.display = 'none', 2000);
+            } catch (err) {
+                status.textContent = 'Error saving photo';
+                status.className = 'status-bar error';
+                status.style.display = 'block';
+                setTimeout(() => status.style.display = 'none', 2000);
+            }
         });
 
         loadJewelryImages();
