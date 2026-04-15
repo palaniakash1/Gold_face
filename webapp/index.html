@@ -92,12 +92,11 @@
             width: 100%;
             max-width: 480px;
             margin: 0 auto;
-            border-radius: 24px;
+            border-radius: 24px !important;
             overflow: hidden;
             box-shadow: var(--shadow-lg);
             background: var(--brown-900);
-            aspect-ratio: 4/5;
-            max-height: 70vh;
+            aspect-ratio: 3/4;
         }
 
         .camera-wrapper::before {
@@ -612,6 +611,8 @@
             .camera-wrapper {
                 max-height: none;
                 aspect-ratio: 3/4;
+                max-width: none;
+                border-radius: 0;
             }
 
             .gallery-section {
