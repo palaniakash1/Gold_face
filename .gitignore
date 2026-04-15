@@ -9,7 +9,6 @@ __pycache__/
 *.egg-info/
 dist/
 build/
-*.whl
 
 # Virtual environments
 venv/
@@ -27,6 +26,10 @@ env/
 .DS_Store
 Thumbs.db
 desktop.ini
+nul
+CON
+PRN
+AUX
 
 # Logs
 *.log
@@ -39,7 +42,6 @@ logs/
 # Test files
 test_*.py
 *_test.py
-hjj.py
 
 # Ruff cache
 .ruff_cache/
@@ -48,4 +50,6 @@ hjj.py
 *.txt
 notes/
 
-nul
+# Captured photos
+webapp/pictures/*.jpg
+webapp/pictures/*.png

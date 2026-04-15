@@ -5,8 +5,11 @@ from math import hypot
 import os
 from glob import glob
 
-necklace_paths = sorted(glob("necklace/*.png"))
-earing_paths = sorted(glob("earing/*.jpg"))
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+
+necklace_paths = sorted(glob(os.path.join(project_root, "assets/necklace/*.png")))
+earing_paths = sorted(glob(os.path.join(project_root, "assets/earing/*.jpg")))
 
 necklace_images = [cv2.imread(path) for path in necklace_paths]
 earing_images = [cv2.imread(path) for path in earing_paths]
@@ -33,7 +36,9 @@ if not ret or frame is None:
     exit()
 
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+predictor = dlib.shape_predictor(
+    os.path.join(project_root, "shape_predictor_68_face_landmarks.dat")
+)
 
 jewelry_index = 0
 

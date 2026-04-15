@@ -6,6 +6,10 @@ Run this script to launch the project.
 
 import sys
 import os
+import subprocess
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
 
 
 def show_menu():
@@ -14,20 +18,21 @@ def show_menu():
     print("=" * 50)
     print("\nChoose an option:\n")
     print("  1. Run Webapp (Recommended - Browser-based)")
-    print("     - Uses face-api.js for face detection")
+    print("     - Uses MediaPipe Face Mesh for face detection")
     print("     - Works in any modern browser")
     print("     - No additional setup required\n")
     print("  2. Run Desktop App (Python/OpenCV)")
     print("     - Uses dlib for face detection")
     print("     - Requires webcam\n")
-    print("  3. Run Both\n")
     print("  0. Exit\n")
 
 
 def run_webapp():
     print("\nStarting Webapp...")
     print("-" * 40)
-    os.chdir(os.path.join(os.path.dirname(__file__), "webapp"))
+    webapp_dir = os.path.join(project_root, "webapp")
+    os.chdir(webapp_dir)
+
     import http.server
     import socketserver
     import webbrowser
@@ -35,6 +40,7 @@ def run_webapp():
     PORT = 8000
 
     Handler = http.server.SimpleHTTPRequestHandler
+    Handler.extensions_map.update({".html": "text/html"})
 
     with socketserver.TCPServer(("", PORT), Handler) as httpd:
         print(f"Server running at http://localhost:{PORT}/")
@@ -51,32 +57,8 @@ def run_webapp():
 def run_desktop():
     print("\nStarting Desktop App...")
     print("-" * 40)
-    os.chdir(os.path.join(os.path.dirname(__file__), "Gold_face"))
-
-    print("\nChoose desktop version:")
-    print("  1. Basic (single jewelry)")
-    print("  2. Enhanced (cycles through 3 combinations)")
-
-    choice = input("\nEnter choice (1/2): ").strip()
-
-    if choice == "1":
-        os.system("python main.py")
-    elif choice == "2":
-        os.system("python new_main.py")
-    else:
-        print("Invalid choice. Running enhanced version...")
-        os.system("python new_main.py")
-
-
-def run_both():
-    import threading
-
-    webapp_thread = threading.Thread(target=run_webapp)
-    webapp_thread.daemon = True
-    webapp_thread.start()
-
-    input("\nWebapp started in browser. Press Enter to run desktop app...")
-    run_desktop()
+    main_script = os.path.join(script_dir, "main.py")
+    subprocess.run([sys.executable, main_script])
 
 
 def main():
@@ -86,8 +68,6 @@ def main():
             run_webapp()
         elif arg in ["2", "desktop", "app"]:
             run_desktop()
-        elif arg in ["3", "both"]:
-            run_both()
         elif arg in ["-h", "--help", "help"]:
             show_menu()
         else:
@@ -100,8 +80,6 @@ def main():
             run_webapp()
         elif choice == "2":
             run_desktop()
-        elif choice == "3":
-            run_both()
         elif choice in ["0", "exit", "q"]:
             print("Goodbye!")
             sys.exit(0)

@@ -8,12 +8,12 @@ echo ================================================
 echo.
 echo Choose an option:
 echo.
-echo   1. Run Webapp (Recommended)
+echo   1. Run Webapp (Recommended - Browser-based)
 echo   2. Run Desktop App
-echo   3. Exit
+echo   0. Exit
 echo.
 
-set /p choice="Enter choice (1/2/3): "
+set /p choice="Enter choice (1/2/0): "
 
 if "%choice%"=="1" (
     echo.
@@ -24,19 +24,9 @@ if "%choice%"=="1" (
     python -m http.server 8000
 ) else if "%choice%"=="2" (
     echo.
-    echo Choose desktop version:
-    echo   1. Basic (single jewelry)
-    echo   2. Enhanced (cycles through combinations)
-    echo.
-    set /p desktop_choice="Enter choice (1/2): "
-    
-    cd /d "%~dp0Gold_face"
-    
-    if "%desktop_choice%"=="1" (
-        python main.py
-    ) else (
-        python new_main.py
-    )
+    echo Starting Desktop App...
+    cd /d "%~dp0src"
+    python main.py
 ) else (
     echo Exiting...
     timeout /t 1 >nul

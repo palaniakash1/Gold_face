@@ -3,7 +3,7 @@
 ## Project Overview
 
 **Gold Face** is a virtual jewelry try-on application using computer vision. It has two implementations:
-- **Desktop App**: Python/OpenCV with dlib face detection (`new_main.py`)
+- **Desktop App**: Python/OpenCV with dlib face detection (`src/main.py`)
 - **Web App**: Browser-based with MediaPipe Face Mesh (`webapp/index.html`)
 
 ## Running the Project
@@ -18,7 +18,8 @@ python server.py
 ### Desktop App
 ```bash
 # Requires: Python 3.12, opencv-python, numpy, dlib
-python new_main.py
+cd src
+python main.py
 
 # Controls:
 #   n - Next jewelry combination
@@ -27,19 +28,7 @@ python new_main.py
 
 ### Project Launcher
 ```bash
-python run_project.py
-```
-
-### MediaPipe Face Mesh (Web App)
-The webapp uses **MediaPipe Face Mesh** for face detection with 468 landmarks:
-- **Ear landmarks**: 234 (left), 454 (right) - actual ear outer points
-- **Chin landmark**: 152
-- **Nose tip**: 1
-
-CDN URLs:
-```
-https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js
-https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js
+python src/run_project.py
 ```
 
 ## Build/Test/Lint Commands
@@ -47,16 +36,14 @@ https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js
 ```bash
 # Python linting (ruff)
 ruff check .
-ruff check new_main.py
+ruff check src/
 
 # Format Python code
 ruff format .
 
 # Check Python syntax
-python -m py_compile new_main.py
-
-# Verify webapp HTML syntax
-# (Open in browser and check console)
+python -m py_compile src/main.py
+python -m py_compile src/run_project.py
 ```
 
 ## Code Style Guidelines
@@ -81,9 +68,6 @@ from math import hypot
 import cv2
 import numpy as np
 import dlib
-
-# Local imports last
-# (if applicable)
 
 # Sort alphabetically within each group
 ```
@@ -124,7 +108,7 @@ def detect_faces(frame):
 class FaceDetector:
 
 # Files: snake_case.py
-new_main.py, face_utils.py
+main.py, face_utils.py
 ```
 
 ### Error Handling
@@ -177,7 +161,7 @@ const isModelLoaded = false;
 // Async/await for asynchronous operations
 async function loadModels() {
     try {
-        await faceapi.nets.tinyFaceDetector.loadFromUri(url);
+        await faceMesh.initialize();
     } catch (error) {
         console.error('Error loading models:', error);
     }
@@ -227,18 +211,28 @@ img.onerror = () => {
 ## Project Structure
 
 ```
-Gold_face/
-├── new_main.py           # Desktop app entry point
-├── run_project.py        # Project launcher
+gold_face/
+├── README.md              # Project documentation
+├── AGENTS.md              # This file
+├── .gitignore            # Git ignore rules
+├── requirements.txt      # Python dependencies
 ├── run.bat               # Windows batch launcher
-├── webapp/
-│   ├── index.html        # Web app (main file)
+│
+├── src/                  # Desktop app (Python)
+│   ├── main.py           # Main application
+│   ├── run_project.py    # Project launcher
+│   └── assets/           # Jewelry images
+│       ├── earring/
+│       └── necklace/
+│
+├── webapp/               # Web application
+│   ├── index.html        # Main webapp
 │   ├── server.py         # HTTP server
-│   └── jewelry/          # Jewelry images
-│       ├── necklace/
-│       └── earring/
-├── earring/              # Desktop app jewelry
-├── necklace/             # Desktop app jewelry
+│   ├── pictures/         # Captured photos
+│   └── jewelry/          # Default jewelry images
+│       ├── earring/
+│       └── necklace/
+│
 ├── shape_predictor_68_face_landmarks.dat  # dlib model (95MB)
 └── dlib-*.whl            # Pre-built dlib wheel
 ```
@@ -263,3 +257,7 @@ Gold_face/
 - Python: Check `cv2.imread()` return values before processing images
 - JavaScript: Check `img.onload` and `img.onerror` for image loading
 - Camera: Verify webcam permissions and availability
+
+### Path Handling
+- Desktop app paths should use `os.path.dirname(os.path.abspath(__file__))` for relative paths
+- Web app paths are relative to the webapp directory
