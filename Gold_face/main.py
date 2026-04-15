@@ -20,7 +20,7 @@ if not ret or frame is None:
 jewel_img = cv2.imread("necklace_1.png")
 earing_img = cv2.imread("earing_1.jpg")
 
-if jewel_img is None or earring_img is None:
+if jewel_img is None or earing_img is None:
     print(
         "Error: Could not load jewelry images. Please ensure necklace_1.png and earring_1.jpg exist."
     )
