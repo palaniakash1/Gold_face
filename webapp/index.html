@@ -1089,77 +1089,10 @@
             currentComboEl.textContent = `Necklace ${currentNecklaceIndex + 1} + Earring ${currentEarringIndex + 1}`;
         }
 
-        function showModal(type) {
-            currentModalType = type;
-            modalTitle.textContent = type === 'necklace' ? 'Add Custom Necklace' : 'Add Custom Earrings';
-            customUrlInput.value = '';
-            urlModal.classList.add('active');
-            setTimeout(() => customUrlInput.focus(), 300);
-        }
-
         function hideModal() {
             urlModal.classList.remove('active');
             currentModalType = null;
-        }
-
-        function addCustomJewelry(url) {
-            const blockedDomains = ['pinterest', 'pin.it', 'instagram', 'facebook', 'twitter'];
-            if (blockedDomains.some(d => url.toLowerCase().includes(d))) {
-                status.textContent = 'Social media URLs not supported';
-                status.className = 'status-bar error';
-                status.style.display = 'block';
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 3000);
-                return;
-            }
-            
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            
-            status.textContent = 'Loading image...';
-            status.className = 'status-bar loading';
-            status.style.display = 'block';
-            
-            img.onload = () => {
-                const jewelryArray = currentModalType === 'necklace' ? necklaces : earrings;
-                const gallery = currentModalType === 'necklace' ? necklaceGallery : earringGallery;
-                
-                const newJewelry = { 
-                    img, 
-                    loaded: true, 
-                    processed: null,
-                    processedLeft: null, 
-                    processedRight: null 
-                };
-                jewelryArray.push(newJewelry);
-                addThumbnail(gallery, newJewelry, jewelryArray.length - 1, currentModalType);
-                
-                if (currentModalType === 'necklace') {
-                    currentNecklaceIndex = jewelryArray.length - 1;
-                } else {
-                    currentEarringIndex = jewelryArray.length - 1;
-                }
-                updateCurrentCombo();
-                
-                status.textContent = 'Added!';
-                status.className = 'status-bar success';
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 2000);
-                
-                hideModal();
-            };
-            
-            img.onerror = () => {
-                status.textContent = 'Failed to load image';
-                status.className = 'status-bar error';
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 3000);
-            };
-            
-            img.src = url;
+            pendingImage = null;
         }
 
         let pendingImage = null;
