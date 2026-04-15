@@ -306,23 +306,6 @@
             margin-bottom: 10px;
         }
 
-        .bg-option {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            background: transparent;
-            color: #fff;
-            cursor: pointer;
-            font-size: 0.85rem;
-            text-align: center;
-        }
-
-        .bg-option.active {
-            border-color: #ffd700;
-            background: rgba(255, 215, 0, 0.1);
-        }
-
         .url-hint {
             font-size: 0.75rem;
             color: #888;
@@ -406,17 +389,11 @@
         <div class="modal-content">
             <h3 id="modalTitle">Add Custom Jewelry</h3>
             
-            <div class="bg-remove-options">
-                <button class="bg-option active" data-mode="transparent" id="bgTransparent">Transparent BG</button>
-                <button class="bg-option" data-mode="auto" id="bgAuto">Auto Remove BG</button>
-                <button class="bg-option" data-mode="white" id="bgWhite">White BG</button>
-            </div>
-            
-            <input type="text" id="customUrlInput" placeholder="Paste direct image URL (PNG/JPG with transparent bg)...">
+            <input type="text" id="customUrlInput" placeholder="Paste direct image URL (PNG/JPG)...">
             
             <div class="url-hint">
                 <small><strong>Works:</strong> imgur.com, imgbb.com, postimages.org, direct .png/.jpg links<br>
-                <strong>Doesn't work:</strong> Pinterest, Instagram, Facebook, Twitter, shortlinks<br>
+                <strong>Doesn't work:</strong> Pinterest, Instagram, Facebook, Twitter<br>
                 <strong>Earrings:</strong> Use single image with left+right side-by-side</small>
             </div>
             
@@ -445,7 +422,6 @@
         let currentEarringIndex = 0;
         let isModelLoaded = false;
         let currentModalType = null;
-        let bgRemovalMode = 'transparent';
 
         async function loadModels() {
             try {
@@ -470,7 +446,11 @@
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { width: 640, height: 480 } 
+                    video: { 
+                        width: 640, 
+                        height: 480,
+                        facingMode: 'user'
+                    } 
                 });
                 video.srcObject = stream;
                 
@@ -483,6 +463,39 @@
                 status.textContent = 'Camera access denied. Please allow camera permission.';
                 status.className = 'status error';
             }
+        }
+
+        function getFaceDimensions(landmarks) {
+            const jaw = landmarks.getJawOutline();
+            const leftEar = jaw[0];
+            const rightEar = jaw[16];
+            const chin = jaw[8];
+            const nose = landmarks.getNose();
+            const forehead = nose[2];
+            
+            const faceWidth = Math.sqrt(
+                Math.pow(rightEar.x - leftEar.x, 2) + 
+                Math.pow(rightEar.y - leftEar.y, 2)
+            );
+            
+            const faceHeight = Math.sqrt(
+                Math.pow(forehead.x - chin.x, 2) + 
+                Math.pow(forehead.y - chin.y, 2)
+            );
+            
+            const faceCenter = {
+                x: (leftEar.x + rightEar.x) / 2,
+                y: (leftEar.y + rightEar.y) / 2 + faceHeight * 0.1
+            };
+            
+            return {
+                width: faceWidth,
+                height: faceHeight,
+                center: faceCenter,
+                chin: chin,
+                leftEar: leftEar,
+                rightEar: rightEar
+            };
         }
 
         async function detectFaces() {
@@ -505,8 +518,9 @@
                     
                     if (detections.length > 0) {
                         const landmarks = detections[0].landmarks;
-                        drawNecklace(landmarks);
-                        drawEarrings(landmarks);
+                        const faceDims = getFaceDimensions(landmarks);
+                        drawNecklace(landmarks, faceDims);
+                        drawEarrings(landmarks, faceDims);
                     }
                 }
                 requestAnimationFrame(detect);
@@ -514,7 +528,7 @@
             detect();
         }
 
-        function removeBackground(image, mode = 'transparent') {
+        function removeBackground(image) {
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = image.width;
             tempCanvas.height = image.height;
@@ -525,51 +539,36 @@
             const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
             const data = imageData.data;
             
-            const bgColor = { r: 0, g: 0, b: 0 };
-            const threshold = 30;
+            const width = tempCanvas.width;
+            const height = tempCanvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
             
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const a = data[i + 3];
-                
-                let isBackground = false;
-                
-                if (mode === 'transparent') {
-                    isBackground = (r < threshold && g < threshold && b < threshold) ||
-                                   (r > 250 && g > 250 && b > 250) ||
-                                   a < 10;
-                } else if (mode === 'white') {
-                    isBackground = (r > 240 && g > 240 && b > 240);
-                } else if (mode === 'auto') {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const i = (y * width + x) * 4;
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const a = data[i + 3];
+                    
+                    if (a < 10) continue;
+                    
                     const brightness = (r + g + b) / 3;
-                    const colorfulness = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));
+                    const saturation = Math.max(Math.abs(r - brightness), Math.abs(g - brightness), Math.abs(b - brightness));
                     
-                    const centerX = (i / 4) % tempCanvas.width;
-                    const centerY = Math.floor((i / 4) / tempCanvas.width);
-                    const centerDist = Math.sqrt(
-                        Math.pow(centerX - tempCanvas.width / 2, 2) +
-                        Math.pow(centerY - tempCanvas.height / 2, 2)
-                    );
-                    const maxDist = Math.sqrt(
-                        Math.pow(tempCanvas.width / 2, 2) +
-                        Math.pow(tempCanvas.height / 2, 2)
-                    );
+                    const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                    const maxDist = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
+                    const normalizedDist = distFromCenter / maxDist;
                     
-                    if (brightness > 240 && colorfulness < 20) {
+                    const threshold = 250 - (normalizedDist * 50);
+                    
+                    if (brightness > threshold && saturation < 15) {
                         data[i + 3] = 0;
                     }
-                    continue;
-                }
-                
-                if (isBackground) {
-                    if (mode === 'transparent' || mode === 'auto') {
+                    
+                    if (r < 15 && g < 15 && b < 15) {
                         data[i + 3] = 0;
-                    } else if (mode === 'white') {
-                        data[i] = 255;
-                        data[i + 1] = 255;
-                        data[i + 2] = 255;
                     }
                 }
             }
@@ -578,91 +577,94 @@
             return tempCanvas;
         }
 
-        function getNecklacePosition(landmarks) {
+        function getNecklacePosition(landmarks, faceDims) {
             const jaw = landmarks.getJawOutline();
             const chin = jaw[8];
             
-            const leftJaw = jaw[0];
-            const rightJaw = jaw[16];
-            
-            const width = Math.sqrt(
-                Math.pow(rightJaw.x - leftJaw.x, 2) + 
-                Math.pow(rightJaw.y - leftJaw.y, 2)
-            ) * 0.8;
-            
-            const height = width * 0.35;
+            const width = faceDims.width * 0.85;
+            const height = faceDims.width * 0.25;
             
             return {
                 x: chin.x - width / 2,
-                y: chin.y + 15,
+                y: chin.y + faceDims.width * 0.05,
                 width: width,
                 height: height
             };
         }
 
-        function getEarringPositions(landmarks) {
+        function getEarringPositions(landmarks, faceDims) {
             const jaw = landmarks.getJawOutline();
             const leftEar = jaw[0];
             const rightEar = jaw[16];
             
-            const nose = landmarks.getNose();
-            const leftNoseTip = nose[0];
-            const rightNoseTip = nose[16];
+            const faceWidth = faceDims.width;
             
-            const earDistance = Math.sqrt(
-                Math.pow(rightEar.x - leftEar.x, 2) +
-                Math.pow(rightEar.y - leftEar.y, 2)
-            );
+            const earWidth = faceWidth * 0.12;
+            const earHeight = earWidth * 2.2;
             
-            const earSize = earDistance * 0.18;
+            const leftEarLobe = {
+                x: leftEar.x + faceWidth * 0.02,
+                y: leftEar.y + faceWidth * 0.15
+            };
+            
+            const rightEarLobe = {
+                x: rightEar.x - faceWidth * 0.14,
+                y: rightEar.y + faceWidth * 0.15
+            };
             
             return {
                 left: {
-                    x: leftEar.x - earSize * 0.3,
-                    y: leftEar.y + earDistance * 0.08,
-                    width: earSize,
-                    height: earSize * 1.8
+                    x: leftEarLobe.x,
+                    y: leftEarLobe.y,
+                    width: earWidth,
+                    height: earHeight
                 },
                 right: {
-                    x: rightEar.x - earSize * 0.7,
-                    y: rightEar.y + earDistance * 0.08,
-                    width: earSize,
-                    height: earSize * 1.8
+                    x: rightEarLobe.x,
+                    y: rightEarLobe.y,
+                    width: earWidth,
+                    height: earHeight
                 }
             };
         }
 
-        function drawNecklace(landmarks) {
+        function drawNecklace(landmarks, faceDims) {
             if (necklaces.length === 0) return;
             
             const necklace = necklaces[currentNecklaceIndex];
             if (!necklace || !necklace.loaded) return;
             
-            const pos = getNecklacePosition(landmarks);
+            const pos = getNecklacePosition(landmarks, faceDims);
             
             let processedCanvas;
             if (necklace.processed) {
                 processedCanvas = necklace.processed;
             } else {
-                processedCanvas = removeBackground(necklace.img, necklace.bgMode || 'transparent');
+                processedCanvas = removeBackground(necklace.img);
                 necklace.processed = processedCanvas;
             }
             
             ctx.save();
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            
             ctx.drawImage(
                 processedCanvas,
-                pos.x, pos.y, pos.width, pos.height
+                canvas.width - pos.x - pos.width,
+                pos.y,
+                pos.width,
+                pos.height
             );
             ctx.restore();
         }
 
-        function drawEarrings(landmarks) {
+        function drawEarrings(landmarks, faceDims) {
             if (earrings.length === 0) return;
             
             const earring = earrings[currentEarringIndex];
             if (!earring || !earring.loaded) return;
             
-            const pos = getEarringPositions(landmarks);
+            const pos = getEarringPositions(landmarks, faceDims);
             const img = earring.img;
             
             const halfWidth = img.width / 2;
@@ -678,7 +680,7 @@
             } else {
                 tempCtx.clearRect(0, 0, halfWidth, img.height);
                 tempCtx.drawImage(img, 0, 0, halfWidth, img.height, 0, 0, halfWidth, img.height);
-                processedLeft = removeBackgroundCanvas(tempCtx, halfWidth, img.height, earring.bgMode || 'transparent');
+                processedLeft = removeBackgroundFromCanvas(tempCtx, halfWidth, img.height);
                 earring.processedLeft = processedLeft;
             }
             
@@ -688,17 +690,33 @@
             } else {
                 tempCtx.clearRect(0, 0, halfWidth, img.height);
                 tempCtx.drawImage(img, halfWidth, 0, halfWidth, img.height, 0, 0, halfWidth, img.height);
-                processedRight = removeBackgroundCanvas(tempCtx, halfWidth, img.height, earring.bgMode || 'transparent');
+                processedRight = removeBackgroundFromCanvas(tempCtx, halfWidth, img.height);
                 earring.processedRight = processedRight;
             }
             
             ctx.save();
-            ctx.drawImage(processedLeft, pos.left.x, pos.left.y, pos.left.width, pos.left.height);
-            ctx.drawImage(processedRight, pos.right.x, pos.right.y, pos.right.width, pos.right.height);
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            
+            ctx.drawImage(
+                processedLeft,
+                canvas.width - pos.left.x - pos.left.width,
+                pos.left.y,
+                pos.left.width,
+                pos.left.height
+            );
+            
+            ctx.drawImage(
+                processedRight,
+                canvas.width - pos.right.x - pos.right.width,
+                pos.right.y,
+                pos.right.width,
+                pos.right.height
+            );
             ctx.restore();
         }
 
-        function removeBackgroundCanvas(sourceCtx, width, height, mode) {
+        function removeBackgroundFromCanvas(sourceCtx, width, height) {
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
@@ -709,35 +727,34 @@
             const imageData = targetCtx.getImageData(0, 0, width, height);
             const data = imageData.data;
             
-            const threshold = 30;
+            const centerX = width / 2;
+            const centerY = height / 2;
             
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const a = data[i + 3];
-                
-                let isBackground = false;
-                
-                if (mode === 'transparent') {
-                    isBackground = (r < threshold && g < threshold && b < threshold) ||
-                                   (r > 250 && g > 250 && b > 250) ||
-                                   a < 10;
-                } else if (mode === 'white') {
-                    isBackground = (r > 240 && g > 240 && b > 240);
-                } else if (mode === 'auto') {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const i = (y * width + x) * 4;
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const a = data[i + 3];
+                    
+                    if (a < 10) continue;
+                    
                     const brightness = (r + g + b) / 3;
-                    const colorfulness = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));
-                    isBackground = brightness > 240 && colorfulness < 20;
-                }
-                
-                if (isBackground) {
-                    if (mode === 'transparent' || mode === 'auto') {
+                    const saturation = Math.max(Math.abs(r - brightness), Math.abs(g - brightness), Math.abs(b - brightness));
+                    
+                    const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                    const maxDist = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
+                    const normalizedDist = distFromCenter / maxDist;
+                    
+                    const threshold = 250 - (normalizedDist * 50);
+                    
+                    if (brightness > threshold && saturation < 15) {
                         data[i + 3] = 0;
-                    } else if (mode === 'white') {
-                        data[i] = 255;
-                        data[i + 1] = 255;
-                        data[i + 2] = 255;
+                    }
+                    
+                    if (r < 15 && g < 15 && b < 15) {
+                        data[i + 3] = 0;
                     }
                 }
             }
@@ -831,7 +848,6 @@
                 const newJewelry = {
                     img,
                     loaded: true,
-                    bgMode: bgRemovalMode,
                     processed: null,
                     processedLeft: null,
                     processedRight: null,
@@ -935,14 +951,6 @@
                     addCustomJewelry(url, currentModalType);
                 }
             }
-        });
-
-        document.querySelectorAll('.bg-option').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                bgRemovalMode = btn.dataset.mode;
-            });
         });
 
         document.getElementById('urlModal').addEventListener('click', (e) => {
