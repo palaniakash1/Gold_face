@@ -65,12 +65,14 @@
 
         #video {
             display: block;
+            transform: scaleX(-1);
         }
 
         #canvas {
             position: absolute;
             top: 0;
             left: 0;
+            transform: scaleX(-1);
         }
 
         .controls {
@@ -644,18 +646,13 @@
                 necklace.processed = processedCanvas;
             }
             
-            ctx.save();
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-            
             ctx.drawImage(
                 processedCanvas,
-                canvas.width - pos.x - pos.width,
+                pos.x,
                 pos.y,
                 pos.width,
                 pos.height
             );
-            ctx.restore();
         }
 
         function drawEarrings(landmarks, faceDims) {
@@ -694,13 +691,9 @@
                 earring.processedRight = processedRight;
             }
             
-            ctx.save();
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-            
             ctx.drawImage(
                 processedLeft,
-                canvas.width - pos.left.x - pos.left.width,
+                pos.left.x,
                 pos.left.y,
                 pos.left.width,
                 pos.left.height
@@ -708,12 +701,11 @@
             
             ctx.drawImage(
                 processedRight,
-                canvas.width - pos.right.x - pos.right.width,
+                pos.right.x,
                 pos.right.y,
                 pos.right.width,
                 pos.right.height
             );
-            ctx.restore();
         }
 
         function removeBackgroundFromCanvas(sourceCtx, width, height) {
