@@ -553,11 +553,9 @@
         </div>
     </div>
 
-    <script type="module">
-        import { Camera } from 'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js';
-        import { FaceMesh } from 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js';
-        import { drawLandmarks, drawConnectors } from 'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js';
-
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script>
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -580,6 +578,7 @@
         let currentEarringIndex = 0;
         let faceMesh = null;
         let currentLandmarks = null;
+        let mpCamera = null;
 
         // MediaPipe Face Mesh landmark indices
         const LANDMARKS = {
@@ -610,7 +609,7 @@
                 status.className = 'status-bar loading';
                 
                 faceMesh = new FaceMesh({
-                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/${file}`
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
                 });
                 
                 faceMesh.setOptions({
@@ -635,31 +634,27 @@
 
         async function startCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: 'user',
-                        width: { ideal: 720 },
-                        height: { ideal: 960 }
-                    } 
+                mpCamera = new Camera(video, {
+                    onFrame: async () => {
+                        if (faceMesh && video.readyState >= 2) {
+                            await faceMesh.send({ image: video });
+                        }
+                    },
+                    width: 720,
+                    height: 960
                 });
-                video.srcObject = stream;
+                await mpCamera.start();
                 
-                video.onloadedmetadata = () => {
-                    video.play();
-                    processFrame();
-                };
+                if (status.className === 'status-bar loading') {
+                    status.textContent = 'Ready';
+                    status.className = 'status-bar success';
+                    setTimeout(() => status.style.display = 'none', 2000);
+                }
             } catch (error) {
                 console.error('Error accessing camera:', error);
                 status.textContent = 'Camera access denied';
                 status.className = 'status-bar error';
             }
-        }
-
-        async function processFrame() {
-            if (faceMesh && video.readyState >= 2) {
-                await faceMesh.send({ image: video });
-            }
-            requestAnimationFrame(processFrame);
         }
 
         function onResults(results) {
@@ -673,12 +668,6 @@
                 
                 drawNecklace();
                 drawEarrings();
-                
-                if (status.className === 'status-bar loading') {
-                    status.textContent = 'Ready';
-                    status.className = 'status-bar success';
-                    setTimeout(() => status.style.display = 'none', 2000);
-                }
             }
         }
 
