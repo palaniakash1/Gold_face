@@ -323,6 +323,17 @@
             background: rgba(255, 215, 0, 0.1);
         }
 
+        .url-hint {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .url-hint strong {
+            color: #aaa;
+        }
+
         @media (max-width: 900px) {
             .main-content {
                 flex-direction: column;
@@ -401,7 +412,12 @@
                 <button class="bg-option" data-mode="white" id="bgWhite">White BG</button>
             </div>
             
-            <input type="text" id="customUrlInput" placeholder="Paste image URL (PNG, JPG, WebP)...">
+            <input type="text" id="customUrlInput" placeholder="Paste direct image URL (PNG/JPG with transparent bg)...">
+            
+            <div class="url-hint">
+                <small>Use direct image links from: imgur, imgbb, postimages, etc.<br>
+                <strong>Earrings:</strong> Use a single image with left+right side-by-side</small>
+            </div>
             
             <div class="modal-buttons">
                 <button class="cancel" id="modalCancel">Cancel</button>
@@ -825,12 +841,12 @@
             };
             
             img.onerror = () => {
-                status.textContent = `Failed to load image from URL`;
+                status.textContent = `Failed: Use direct image URLs (imgur, imgbb, etc.) - Pinterest/shortlinks not supported`;
                 status.className = 'status error';
                 setTimeout(() => {
                     status.textContent = loadingStatus;
                     status.className = 'status success';
-                }, 2000);
+                }, 4000);
                 closeModal();
             };
             
