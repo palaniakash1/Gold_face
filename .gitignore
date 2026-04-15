@@ -1,29 +1,49 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 *.whl
 
 # Virtual environments
 venv/
 env/
+.venv/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Git
-.git/
+desktop.ini
 
 # Logs
 *.log
+logs/
 
-# Large binary files (use Git LFS instead)
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.mp4
+# Python bytecode
+*.pyc
+*.pyo
+
+# Test files
+test_*.py
+*_test.py
+hjj.py
+
+# Ruff cache
+.ruff_cache/
+
+# Notes files
+*.txt
+notes/
