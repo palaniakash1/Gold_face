@@ -22,7 +22,7 @@ cd webapp
 python server.py
 ```
 
-Then open http://localhost:8000 in your browser.
+Then open http://localhost:8001 in your browser.
 
 **Requirements:**
 - Python 3.x

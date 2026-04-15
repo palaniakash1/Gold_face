@@ -12,7 +12,7 @@
 ```bash
 cd webapp
 python server.py
-# Opens at http://localhost:8000
+# Opens at http://localhost:8001
 ```
 
 ### Desktop App
