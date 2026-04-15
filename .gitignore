@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.whl
+
+# Virtual environments
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Logs
+*.log
+
+# Large binary files (use Git LFS instead)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
