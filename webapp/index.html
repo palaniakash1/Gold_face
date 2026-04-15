@@ -294,6 +294,32 @@
             box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
         }
 
+        .add-thumbnail {
+            flex-shrink: 0;
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
+            border: 2px dashed var(--cream-300);
+            background: var(--cream-100);
+            color: var(--brown-500);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-thumbnail:hover {
+            border-color: var(--gold-400);
+            color: var(--gold-500);
+            background: var(--cream-200);
+        }
+
+        .add-thumbnail:active {
+            transform: scale(0.95);
+        }
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -520,17 +546,20 @@
                 <div class="gallery-section">
                     <div class="gallery-header">
                         <h2 class="gallery-title">Collection</h2>
-                        <button class="add-url-btn" id="addCustomBtn">+ Add Custom</button>
                     </div>
                     
                     <div class="gallery-category">
                         <div class="category-label">Necklaces</div>
-                        <div class="thumbnail-scroll" id="necklaceGallery"></div>
+                        <div class="thumbnail-scroll" id="necklaceGallery">
+                            <button class="add-thumbnail" id="addNecklaceBtn">+</button>
+                        </div>
                     </div>
                     
                     <div class="gallery-category">
                         <div class="category-label">Earrings</div>
-                        <div class="thumbnail-scroll" id="earringGallery"></div>
+                        <div class="thumbnail-scroll" id="earringGallery">
+                            <button class="add-thumbnail" id="addEarringBtn">+</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -568,7 +597,6 @@
         const urlModal = document.getElementById('urlModal');
         const customUrlInput = document.getElementById('customUrlInput');
         const modalTitle = document.getElementById('modalTitle');
-        const addCustomBtn = document.getElementById('addCustomBtn');
         const modalCancel = document.getElementById('modalCancel');
         const modalAdd = document.getElementById('modalAdd');
 
@@ -898,7 +926,8 @@
                 }
                 updateCurrentCombo();
             });
-            container.appendChild(thumb);
+            const addBtn = container.querySelector('.add-thumbnail');
+            container.insertBefore(thumb, addBtn);
         }
 
         function checkAllLoaded() {
@@ -984,7 +1013,8 @@
             img.src = url;
         }
 
-        addCustomBtn.addEventListener('click', () => showModal('necklace'));
+        document.getElementById('addNecklaceBtn').addEventListener('click', () => showModal('necklace'));
+        document.getElementById('addEarringBtn').addEventListener('click', () => showModal('earring'));
         modalCancel.addEventListener('click', hideModal);
         modalAdd.addEventListener('click', () => {
             const url = customUrlInput.value.trim();
