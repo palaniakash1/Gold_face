@@ -845,7 +845,7 @@
                 img.crossOrigin = 'anonymous';
                 img.src = `jewelry/necklace/${name}`;
                 img.onload = () => {
-                    necklaces[index] = { img, loaded: true };
+                    necklaces[index] = { img, loaded: true, processed: null };
                     addThumbnail(necklaceGallery, necklaces[index], index, 'necklace');
                     checkAllLoaded();
                 };
@@ -857,7 +857,7 @@
                 img.crossOrigin = 'anonymous';
                 img.src = `jewelry/earring/${name}`;
                 img.onload = () => {
-                    earrings[index] = { img, loaded: true };
+                    earrings[index] = { img, loaded: true, processedLeft: null, processedRight: null };
                     addThumbnail(earringGallery, earrings[index], index, 'earring');
                     checkAllLoaded();
                 };
@@ -928,7 +928,13 @@
                 const jewelryArray = currentModalType === 'necklace' ? necklaces : earrings;
                 const gallery = currentModalType === 'necklace' ? necklaceGallery : earringGallery;
                 
-                const newJewelry = { img, loaded: true };
+                const newJewelry = { 
+                    img, 
+                    loaded: true, 
+                    processed: null,
+                    processedLeft: null, 
+                    processedRight: null 
+                };
                 jewelryArray.push(newJewelry);
                 addThumbnail(gallery, newJewelry, jewelryArray.length - 1, currentModalType);
                 
