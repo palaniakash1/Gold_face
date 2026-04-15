@@ -320,6 +320,123 @@
             transform: scale(0.95);
         }
 
+        .preview-area {
+            width: 100%;
+            height: 160px;
+            border-radius: 16px;
+            background: var(--cream-100);
+            border: 2px dashed var(--cream-300);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--cream-300);
+        }
+
+        .preview-placeholder span {
+            font-size: 0.8rem;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .preview-image.visible {
+            display: block;
+        }
+
+        .preview-area.has-image .preview-placeholder {
+            display: none;
+        }
+
+        .modal-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .modal-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: var(--cream-200);
+            color: var(--brown-600);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-tab.active {
+            background: linear-gradient(135deg, var(--gold-500) 0%, var(--gold-600) 100%);
+            color: var(--cream-50);
+        }
+
+        .modal-content-area {
+            margin-bottom: 20px;
+        }
+
+        .upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 24px;
+            border: 2px dashed var(--cream-300);
+            border-radius: 16px;
+            background: var(--cream-100);
+        }
+
+        .upload-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            background: var(--brown-600);
+            color: var(--cream-50);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background: var(--brown-700);
+        }
+
+        .upload-hint {
+            font-size: 0.75rem;
+            color: var(--brown-500);
+        }
+
+        .url-area {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .url-hint {
+            font-size: 0.7rem;
+            color: var(--brown-500);
+            margin-top: 4px;
+        }
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -570,11 +687,43 @@
         <div class="modal">
             <div class="modal-handle"></div>
             <h3 class="modal-title" id="modalTitle">Add Custom Jewelry</h3>
-            <p class="modal-hint">
-                Paste a direct image URL. Works with: <strong>imgur, imgbb, postimages</strong><br>
-                <strong>Earrings:</strong> Use left+right side-by-side image
-            </p>
-            <input type="text" class="url-input" id="customUrlInput" placeholder="https://example.com/image.png">
+            
+            <div class="preview-area" id="previewArea">
+                <div class="preview-placeholder" id="previewPlaceholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                    <span>Preview will appear here</span>
+                </div>
+                <img id="previewImage" class="preview-image" src="" alt="Preview">
+            </div>
+            
+            <div class="modal-tabs">
+                <button class="modal-tab active" id="tabUpload">Upload</button>
+                <button class="modal-tab" id="tabUrl">URL</button>
+            </div>
+            
+            <div class="modal-content-area">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <button class="upload-btn" id="uploadBtn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Choose Image
+                    </button>
+                    <p class="upload-hint">or drag and drop</p>
+                </div>
+                <div class="url-area" id="urlArea" style="display: none;">
+                    <input type="text" class="url-input" id="customUrlInput" placeholder="Paste image URL (imgur, imgbb, etc.)">
+                    <p class="url-hint">Earrings: use left+right side-by-side image</p>
+                </div>
+            </div>
+            
             <div class="modal-actions">
                 <button class="modal-btn cancel" id="modalCancel">Cancel</button>
                 <button class="modal-btn confirm" id="modalAdd">Add</button>
@@ -1013,19 +1162,177 @@
             img.src = url;
         }
 
+        let pendingImage = null;
+
+        function showModal(type) {
+            currentModalType = type;
+            modalTitle.textContent = type === 'necklace' ? 'Add Custom Necklace' : 'Add Custom Earrings';
+            customUrlInput.value = '';
+            pendingImage = null;
+            document.getElementById('previewImage').src = '';
+            document.getElementById('previewImage').classList.remove('visible');
+            document.getElementById('previewArea').classList.remove('has-image');
+            document.getElementById('tabUpload').classList.add('active');
+            document.getElementById('tabUrl').classList.remove('active');
+            document.getElementById('uploadArea').style.display = 'flex';
+            document.getElementById('urlArea').style.display = 'none';
+            urlModal.classList.add('active');
+        }
+
         document.getElementById('addNecklaceBtn').addEventListener('click', () => showModal('necklace'));
         document.getElementById('addEarringBtn').addEventListener('click', () => showModal('earring'));
         modalCancel.addEventListener('click', hideModal);
-        modalAdd.addEventListener('click', () => {
-            const url = customUrlInput.value.trim();
-            if (url) addCustomJewelry(url);
+        
+        document.getElementById('tabUpload').addEventListener('click', () => {
+            document.getElementById('tabUpload').classList.add('active');
+            document.getElementById('tabUrl').classList.remove('active');
+            document.getElementById('uploadArea').style.display = 'flex';
+            document.getElementById('urlArea').style.display = 'none';
         });
-        customUrlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const url = customUrlInput.value.trim();
-                if (url) addCustomJewelry(url);
+        
+        document.getElementById('tabUrl').addEventListener('click', () => {
+            document.getElementById('tabUrl').classList.add('active');
+            document.getElementById('tabUpload').classList.remove('active');
+            document.getElementById('urlArea').style.display = 'flex';
+            document.getElementById('uploadArea').style.display = 'none';
+            customUrlInput.focus();
+        });
+        
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+        
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const dataUrl = event.target.result;
+                    document.getElementById('previewImage').src = dataUrl;
+                    document.getElementById('previewImage').classList.add('visible');
+                    document.getElementById('previewArea').classList.add('has-image');
+                    pendingImage = dataUrl;
+                };
+                reader.readAsDataURL(file);
             }
         });
+        
+        customUrlInput.addEventListener('input', () => {
+            const url = customUrlInput.value.trim();
+            if (url) {
+                document.getElementById('previewImage').src = url;
+                document.getElementById('previewImage').classList.add('visible');
+                document.getElementById('previewArea').classList.add('has-image');
+                pendingImage = url;
+            } else {
+                document.getElementById('previewImage').src = '';
+                document.getElementById('previewImage').classList.remove('visible');
+                document.getElementById('previewArea').classList.remove('has-image');
+                pendingImage = null;
+            }
+        });
+        
+        modalAdd.addEventListener('click', () => {
+            if (!pendingImage) {
+                status.textContent = 'Please select or enter an image URL';
+                status.className = 'status-bar error';
+                status.style.display = 'block';
+                setTimeout(() => status.style.display = 'none', 3000);
+                return;
+            }
+            
+            const img = new Image();
+            
+            if (pendingImage.startsWith('data:')) {
+                img.onload = () => {
+                    addJewelryFromDataURL(pendingImage);
+                };
+                img.src = pendingImage;
+            } else {
+                const blockedDomains = ['pinterest', 'pin.it', 'instagram', 'facebook', 'twitter'];
+                if (blockedDomains.some(d => pendingImage.toLowerCase().includes(d))) {
+                    status.textContent = 'Social media URLs not supported';
+                    status.className = 'status-bar error';
+                    status.style.display = 'block';
+                    setTimeout(() => status.style.display = 'none', 3000);
+                    return;
+                }
+                
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    addJewelryFromURL(pendingImage);
+                };
+                img.onerror = () => {
+                    status.textContent = 'Failed to load image';
+                    status.className = 'status-bar error';
+                    status.style.display = 'block';
+                    setTimeout(() => status.style.display = 'none', 3000);
+                };
+                img.src = pendingImage;
+            }
+        });
+        
+        function addJewelryFromDataURL(dataUrl) {
+            const jewelryArray = currentModalType === 'necklace' ? necklaces : earrings;
+            const gallery = currentModalType === 'necklace' ? necklaceGallery : earringGallery;
+            
+            const img = new Image();
+            img.src = dataUrl;
+            img.onload = () => {
+                const newJewelry = { 
+                    img, 
+                    loaded: true, 
+                    processed: null,
+                    processedLeft: null, 
+                    processedRight: null 
+                };
+                jewelryArray.push(newJewelry);
+                addThumbnail(gallery, newJewelry, jewelryArray.length - 1, currentModalType);
+                
+                if (currentModalType === 'necklace') {
+                    currentNecklaceIndex = jewelryArray.length - 1;
+                } else {
+                    currentEarringIndex = jewelryArray.length - 1;
+                }
+                updateCurrentCombo();
+                hideModal();
+            };
+        }
+        
+        function addJewelryFromURL(url) {
+            const jewelryArray = currentModalType === 'necklace' ? necklaces : earrings;
+            const gallery = currentModalType === 'necklace' ? necklaceGallery : earringGallery;
+            
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                const newJewelry = { 
+                    img, 
+                    loaded: true, 
+                    processed: null,
+                    processedLeft: null, 
+                    processedRight: null 
+                };
+                jewelryArray.push(newJewelry);
+                addThumbnail(gallery, newJewelry, jewelryArray.length - 1, currentModalType);
+                
+                if (currentModalType === 'necklace') {
+                    currentNecklaceIndex = jewelryArray.length - 1;
+                } else {
+                    currentEarringIndex = jewelryArray.length - 1;
+                }
+                updateCurrentCombo();
+                hideModal();
+            };
+            img.onerror = () => {
+                status.textContent = 'Failed to load image';
+                status.className = 'status-bar error';
+                status.style.display = 'block';
+                setTimeout(() => status.style.display = 'none', 3000);
+            };
+            img.src = url;
+        }
+        
         urlModal.addEventListener('click', (e) => {
             if (e.target === urlModal) hideModal();
         });
