@@ -415,8 +415,9 @@
             <input type="text" id="customUrlInput" placeholder="Paste direct image URL (PNG/JPG with transparent bg)...">
             
             <div class="url-hint">
-                <small>Use direct image links from: imgur, imgbb, postimages, etc.<br>
-                <strong>Earrings:</strong> Use a single image with left+right side-by-side</small>
+                <small><strong>Works:</strong> imgur.com, imgbb.com, postimages.org, direct .png/.jpg links<br>
+                <strong>Doesn't work:</strong> Pinterest, Instagram, Facebook, Twitter, shortlinks<br>
+                <strong>Earrings:</strong> Use single image with left+right side-by-side</small>
             </div>
             
             <div class="modal-buttons">
@@ -803,6 +804,20 @@
         }
 
         function addCustomJewelry(url, type) {
+            const blockedDomains = ['pinterest', 'pin.it', 'instagram', 'facebook', 'twitter'];
+            const isBlocked = blockedDomains.some(d => url.toLowerCase().includes(d));
+            
+            if (isBlocked) {
+                status.textContent = `Error: Social media URLs (Pinterest, Instagram, etc.) are blocked due to CORS policy`;
+                status.className = 'status error';
+                setTimeout(() => {
+                    status.textContent = 'Ready! Point your face at the camera.';
+                    status.className = 'status success';
+                }, 4000);
+                closeModal();
+                return;
+            }
+            
             const img = new Image();
             img.crossOrigin = 'anonymous';
             
