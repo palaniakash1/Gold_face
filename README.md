@@ -15,17 +15,26 @@ A real-time virtual jewelry try-on application using computer vision and face la
 
 ## Running the Project
 
-### Web App (Recommended)
+### Live Web App (Recommended)
+
+The web app is deployed on GitHub Pages:
+**https://palaniakash1.github.io/Gold_face/**
+
+Just open in any browser with webcam access.
+
+### Local Web App
 
 ```bash
+# Option 1: Open index.html directly in browser
+
+# Option 2: Run local server
 cd webapp
 python server.py
+# Open http://localhost:8001
 ```
 
-Then open http://localhost:8001 in your browser.
-
 **Requirements:**
-- Python 3.x
+- Python 3.x (for local server only)
 - Modern browser (Chrome, Firefox, Safari, Edge)
 - Webcam access
 
@@ -61,30 +70,32 @@ gold_face/
 ├── README.md              # This file
 ├── AGENTS.md              # Agent coding guidelines
 ├── .gitignore            # Git ignore rules
-├── requirements.txt       # Python dependencies
-├── run.bat               # Windows launcher
+├── index.html            # Web app (served via GitHub Pages)
+├── jewelry/              # Jewelry images for web app
+│   ├── earring/
+│   │   ├── earring_1.jpg
+│   │   ├── earring_2.jpg
+│   │   └── earring_3.jpg
+│   └── necklace/
+│       ├── necklace_1.png
+│       ├── necklace_2.png
+│       └── necklace_3.png
+│
+├── webapp/               # Local development files (not deployed)
+│   ├── index.html        # Copy of web app
+│   ├── server.py         # Local HTTP server
+│   ├── pictures/         # Captured photos
+│   └── jewelry/         # Jewelry images (symlink/copy)
 │
 ├── src/                  # Desktop app (Python)
 │   ├── main.py           # Main application
 │   ├── run_project.py    # Project launcher
 │   └── assets/           # Jewelry images
 │       ├── earring/
-│       │   ├── earring_1.jpg
-│       │   ├── earring_2.jpg
-│       │   └── earring_3.jpg
-│       └── necklace/
-│           ├── necklace_1.png
-│           ├── necklace_2.png
-│           └── necklace_3.png
-│
-├── webapp/               # Web application
-│   ├── index.html        # Main webapp (MediaPipe Face Mesh)
-│   ├── server.py         # HTTP server
-│   ├── pictures/         # Captured photos (downloaded here)
-│   └── jewelry/          # Webapp jewelry images
-│       ├── earring/
 │       └── necklace/
 │
+├── requirements.txt       # Python dependencies
+├── run.bat               # Windows launcher
 ├── shape_predictor_68_face_landmarks.dat  # dlib model (95MB)
 └── dlib-19.24.99-cp312-cp312-win_amd64.whl  # Pre-built dlib wheel
 ```
