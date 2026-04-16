@@ -50,6 +50,12 @@ test_*.py
 *.txt
 notes/
 
-# Captured photos
-webapp/pictures/*.jpg
-webapp/pictures/*.png
+# Desktop app (not needed for web hosting)
+src/
+server.py
+webapp/
+requirements.txt
+run.bat
+AGENTS.md
+*.dat
+*.whl
