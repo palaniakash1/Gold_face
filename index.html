@@ -863,8 +863,8 @@
                             await faceMesh.send({ image: video });
                         }
                     },
-                    width: 720,
-                    height: 960
+                    width: 1080,
+                    height: 1440
                 });
                 await mpCamera.start();
                 
@@ -1346,22 +1346,25 @@
             captureBtn.classList.add('captured');
             setTimeout(() => captureBtn.classList.remove('captured'), 300);
 
+            const CAPTURE_WIDTH = 1080;
+            const CAPTURE_HEIGHT = 1440;
+
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
+            tempCanvas.width = CAPTURE_WIDTH;
+            tempCanvas.height = CAPTURE_HEIGHT;
             const tempCtx = tempCanvas.getContext('2d');
 
-            tempCtx.translate(tempCanvas.width, 0);
+            tempCtx.translate(CAPTURE_WIDTH, 0);
             tempCtx.scale(-1, 1);
 
-            tempCtx.drawImage(video, 0, 0);
-            tempCtx.drawImage(canvas, 0, 0);
+            tempCtx.drawImage(video, 0, 0, CAPTURE_WIDTH, CAPTURE_HEIGHT);
+            tempCtx.drawImage(canvas, 0, 0, CAPTURE_WIDTH, CAPTURE_HEIGHT);
 
             tempCtx.setTransform(1, 0, 0, 1, 0, 0);
-            tempCtx.translate(tempCanvas.width, 0);
+            tempCtx.translate(CAPTURE_WIDTH, 0);
             tempCtx.scale(-1, 1);
 
-            const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.85);
+            const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.92);
 
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
             const filename = `goldface_${timestamp}.jpg`;
